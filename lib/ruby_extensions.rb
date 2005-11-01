@@ -48,7 +48,7 @@ class ::Module
   #   (later on in your code, most likely in another file)
   #   module MyModule
   #     config :param_one, "another value"
-  #     config :param_two, 98765, :override
+  #     config :param_two, 98765, :force
   #   end
   #
   # The configuration is now:
