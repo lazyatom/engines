@@ -9,8 +9,9 @@ module ::ActionView
         return default_template if File.exist?(default_template)
 
         # Otherwise, check in the engines to see if the template can be found there.
-        Engines::ActiveEngines.each do |framework|
-          site_specific_path = File.join(framework.to_s, 'app', 'views',  template_path.to_s + '.' + extension.to_s)
+        # Load this in order so that more recently started Engines will take priority.
+        Engines::ActiveEngines.each do |engine|
+          site_specific_path = File.join(engine.to_s, 'app', 'views',  template_path.to_s + '.' + extension.to_s)
           return site_specific_path if File.exist?(site_specific_path)
         end
 
@@ -44,13 +45,13 @@ module ::ActionView
         options = sources.last.is_a?(Hash) ? sources.pop.stringify_keys : { }
         new_sources = []
 
-        default = "/#{Engines::PublicDir}/#{engine_name}/stylesheets/#{engine_name}.css"
+        default = "/#{Engines.config(:public_dir)}/#{engine_name}/stylesheets/#{engine_name}.css"
         if defined?(RAILS_ROOT) && File.exists?("#{RAILS_ROOT}/public#{default}")
           new_sources << default
         end
         
         sources.each { |name| 
-          new_sources << "/#{Engines::PublicDir}/#{engine_name}/stylesheets/#{name}.css"
+          new_sources << "/#{Engines.config(:public_dir)}/#{engine_name}/stylesheets/#{name}.css"
         }
         new_sources << options
         stylesheet_link_tag(*new_sources)
@@ -76,13 +77,13 @@ module ::ActionView
         options = sources.last.is_a?(Hash) ? sources.pop.stringify_keys : { }
         new_sources = []
         
-        default = "/#{Engines::PublicDir}/#{engine_name}/javascripts/#{engine_name}.js"
+        default = "/#{Engines.config(:public_dir)}/#{engine_name}/javascripts/#{engine_name}.js"
         if defined?(RAILS_ROOT) && File.exists?("#{RAILS_ROOT}/public#{default}")
           new_sources << default
         end
         
         sources.each { |name| 
-          new_sources << "/#{Engines::PublicDir}/#{engine_name}/javascripts/#{name}.js"
+          new_sources << "/#{Engines.config(:public_dir)}/#{engine_name}/javascripts/#{name}.js"
         }
         new_sources << options
         javascript_include_tag(*new_sources)        

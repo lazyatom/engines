@@ -12,7 +12,7 @@ require 'action_view_extensions'
 #    e.g.
 #       # Add your application configuration here
 #       module MyEngine
-#         default_constant :TopSpeed, "TurboFast"
+#         config :TopSpeed, "TurboFast"
 #       end
 #    
 #       Engine.start "my_engine"
@@ -138,10 +138,10 @@ module ::Engines
   ActiveEngines = []
   
   # The root directory for engines
-  default_constant :RootDir, File.join(RAILS_ROOT, "vendor", "engines")
+  config :root, File.join(RAILS_ROOT, "vendor", "plugins")
   
   # The name of the public folder under which engine files are copied
-  default_constant :PublicDir, "engine_files"
+  config :public_dir, "engine_files"
   
   class << self
   
@@ -154,17 +154,18 @@ module ::Engines
     # * copy_files => true | false
     #
     def start(engine, options={})
-      engine_dir = File.join(Engines::RootDir, engine)
+      engine_dir = File.join(Engines.config(:root), engine)
     
       RAILS_DEFAULT_LOGGER.debug "Starting engine '#{engine}' from '#{File.expand_path(engine_dir)}'"
     
-      Engines::ActiveEngines << engine_dir
+      # put this engine at the front of the ActiveEngines list
+      Engines::ActiveEngines.unshift engine_dir
     
       # add the code directories of this engine to the load path
       add_engine_to_load_path(engine)
     
       # load the engine's init.rb file
-      eval(IO.read(File.join(engine_dir, "init.rb")))
+      eval(IO.read(File.join(engine_dir, "init_engine.rb")))
     
       # add the controller path to the Dependency system
       Controllers.add_path(File.join(engine_dir, 'app', 'controllers'))
@@ -179,11 +180,11 @@ module ::Engines
     # to the load path
     def add_engine_to_load_path(engine)
       # Add ALL paths under the engine root to the load path
-      app_dirs = [File.join(Engines::RootDir, engine) + "/app/controllers",
-                  File.join(Engines::RootDir, engine) + "/app/models",
-                  File.join(Engines::RootDir, engine) + "/app/helpers"]
-      lib_dirs = Dir[File.join(Engines::RootDir, engine) + "/lib/**/*"] +
-                 [File.join(Engines::RootDir, engine, "lib")]
+      app_dirs = [File.join(Engines.config(:root), engine) + "/app/controllers",
+                  File.join(Engines.config(:root), engine) + "/app/models",
+                  File.join(Engines.config(:root), engine) + "/app/helpers"]
+      lib_dirs = Dir[File.join(Engines.config(:root), engine) + "/lib/**/*"] +
+                 [File.join(Engines.config(:root), engine, "lib")]
       load_paths = (app_dirs + lib_dirs).select { |d| 
         File.directory?(d)
       }
@@ -202,7 +203,7 @@ module ::Engines
     def copy_engine_files(engine)
 
       # create the /public/frameworks directory if it doesn't exist
-      public_engine_dir = File.expand_path(File.join(RAILS_ROOT, "public", Engines::PublicDir))
+      public_engine_dir = File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
     
       if !File.exists?(public_engine_dir)
         # create the public/engines directory, with a warning message in it.
@@ -219,7 +220,7 @@ EOS
         end
       end
     
-      source = File.join(Engines::RootDir, engine, "public")
+      source = File.join(Engines.config(:root), engine, "public")
     
       # if there is no public directory, just return after this file
       return if !File.exist?(source)   
@@ -233,7 +234,7 @@ EOS
       source_dirs.uniq.each { |dir|
         begin        
           # strip out the base path and add the result to the public path
-          relative_dir = dir.gsub(File.join(Engines::RootDir, engine, "public"), engine)
+          relative_dir = dir.gsub(File.join(Engines.config(:root), engine, "public"), engine)
           target_dir = File.join(public_engine_dir, relative_dir)
           unless File.exist?(target_dir)
             RAILS_DEFAULT_LOGGER.debug "creating directory '#{target_dir}'"
@@ -249,7 +250,7 @@ EOS
       source_files.uniq.each { |file|
         begin
           # change the path from the ENGINE ROOT to the public directory root for this engine
-          target = file.gsub(File.join(Engines::RootDir, engine, "public"), 
+          target = file.gsub(File.join(Engines.config(:root), engine, "public"), 
                              File.join(public_engine_dir, engine))
           unless File.exist?(target) && FileUtils.identical?(file, target)
             RAILS_DEFAULT_LOGGER.debug "copying file '#{file}' to '#{target}'"
@@ -269,7 +270,7 @@ end
 #--
 # Create the Engines directory if it isn't present
 #++
-if !File.exist?(Engines::RootDir)
+if !File.exist?(Engines.config(:root))
   RAILS_DEFAULT_LOGGER.debug "Creating engines directory in /vendor"
-  FileUtils.mkdir_p(Engines::RootDir)
+  FileUtils.mkdir_p(Engines.config(:root))
 end
