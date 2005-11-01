@@ -61,7 +61,7 @@ class ::Module
       self.class_eval("CONFIG = {}")
     end
     
-    if value
+    if value != nil
       if override or self::CONFIG[name] == nil
         self::CONFIG[name] = value 
       end
