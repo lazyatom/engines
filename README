@@ -21,7 +21,7 @@
    e.g.
       # Add your application configuration here
       module MyEngine
-        config :TopSpeed, "MegaTurboFast"
+        config :top_speed, "MegaTurboFast"
       end
  
       Engine.start "my_engine"
@@ -117,7 +117,7 @@ For a user to set these parameters, they should reopen the module (before the co
 Engine.start call), as follows:
 
   module MyModule
-    config :SomeOption, "really_important_value"
+    config :some_option, "really_important_value"
   end
   Engine.start "my_engine"
 
@@ -126,7 +126,7 @@ set this config value will be ignored and the user-specified value used instead.
 are situations where you *really* want to set the config value, even if it already exists. In such cases
 the config call can be changed to:
 
-  config :SomeOption, "no_THIS_really_important_value", :force
+  config :some_option, "no_THIS_really_important_value", :force
 
 The additional parameter will force the new value to be used. For more information, see Module#config.
 
