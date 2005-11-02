@@ -133,11 +133,17 @@ EOS
       
       RAILS_DEFAULT_LOGGER.debug "source dirs: #{source_dirs.inspect}"
 
+      # ensure that we are copying to <something>_engine, whatever the user gives us
+      full_engine_name = engine.to_s
+      full_engine_name += "_engine" if !(full_engine_name =~ /\_engine$/)
+
+
       # create all the directories, transforming the old path into the new path
       source_dirs.uniq.each { |dir|
         begin        
+
           # strip out the base path and add the result to the public path
-          relative_dir = dir.gsub(File.join(engine_dir, "public"), engine.to_s)
+          relative_dir = dir.gsub(File.join(engine_dir, "public"), full_engine_name)
           target_dir = File.join(public_engine_dir, relative_dir)
           unless File.exist?(target_dir)
             RAILS_DEFAULT_LOGGER.debug "creating directory '#{target_dir}'"
@@ -149,12 +155,13 @@ EOS
       }
 
 
+
       # copy all the files, transforming the old path into the new path
       source_files.uniq.each { |file|
         begin
           # change the path from the ENGINE ROOT to the public directory root for this engine
           target = file.gsub(File.join(engine_dir, "public"), 
-                             File.join(public_engine_dir, engine.to_s))
+                             File.join(public_engine_dir, full_engine_name))
           unless File.exist?(target) && FileUtils.identical?(file, target)
             RAILS_DEFAULT_LOGGER.debug "copying file '#{file}' to '#{target}'"
             FileUtils.cp(file, target)
