@@ -17,19 +17,27 @@ module ::Engines
     # This will also copy any files in a directory named 'public'
     # into the public webserver directory.
     #
+    # If no engine name is given, all engines will be started.
+    #
     # Options can include
     # * :copy_files => true | false
     # * :engine_name => the name within the plugins directory this engine resides, if
     #   different from the first parameter
     #
-    def start(engine, options={})
+    def start(engine=nil, options={})
+      
+      if engine == nil
+        start_all
+        return
+      end
+      
       if options[:engine_name]
-        engine_dir = File.join(Engines.config(:root), options[:engine_name])
+        engine_dir = get_engine_dir(options[:engine_name])
       else
         engine_dir = get_engine_dir(engine)
       end
     
-      RAILS_DEFAULT_LOGGER.debug "Starting engine '#{engine}' from '#{File.expand_path(engine_dir)}'"
+      RAILS_DEFAULT_LOGGER.debug "Trying to start engine '#{engine}' from '#{File.expand_path(engine_dir)}'"
     
       # put this engine at the front of the ActiveEngines list
       Engines::ActiveEngines.unshift engine_dir
@@ -38,7 +46,12 @@ module ::Engines
       add_engine_to_load_path(engine_dir)
     
       # load the engine's init.rb file
-      eval(IO.read(File.join(engine_dir, "init_engine.rb")))
+      startup_file = File.join(engine_dir, "init_engine.rb")
+      if File.exist?(startup_file)
+        eval(IO.read(startup_file))
+      else
+        RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{engine}'..."
+      end
     
       # add the controller path to the Dependency system
       Controllers.add_path(File.join(engine_dir, 'app', 'controllers'))
@@ -47,6 +60,21 @@ module ::Engines
       if options[:copy_files] != false
         copy_engine_files(engine)
       end
+    end
+
+    # Starts all available engines. Plugins are considered engines if they
+    # include an init_engine.rb file, or they are named <something>_engine.
+    def start_all
+      plugins = Dir[File.join(config(:root), "*")]
+      RAILS_DEFAULT_LOGGER.debug "considering plugins: #{plugins.inspect}"
+      plugins.each { |plugin|
+        engine_name = File.basename(plugins)
+        if File.exist?(File.join(plugin, "init_engine.rb")) or
+           (engine_name =~ /_engine$/)
+          # start the engine...
+          start(engine_name)
+        end
+      }
     end
 
     # Adds all directories in the /app and /lib directories within the engine
@@ -147,7 +175,7 @@ EOS
           # try adding "_engine" to the end of the path.
           engine_dir += "_engine"
           if !File.exist?(engine_dir)
-            raise RuntimeError "Cannot find the engine '#{engine}' in either /vendor/plugins/#{engine} or /vendor/plugins/#{engine}_engine..."
+            raise "Cannot find the engine '#{engine}' in either /vendor/plugins/#{engine} or /vendor/plugins/#{engine}_engine..."
           end
         end      
       

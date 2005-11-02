@@ -84,6 +84,11 @@ When you call <tt>Engines.start :my_engine</tt> in <tt>environment.rb</tt> a few
 
 From within <tt>init_engine.rb</tt> you should load any libraries from your <tt>lib</tt> directory that your engine might need to function. You can also perform any configuration required.
 
+=== Loading all Engines
+
+Calling either Engines.start (with no arguments) or Engines.start_all will load all engines available. Please note that your plugin can only be detected as an engine by the presence of an 'init_engine.rb' file, or if the engine is in a directory named <something>_engine. If neither of these conditions hold, then your engine will not be loaded by Engines.start() or Engines.start_all().
+
+
 === Configuring Engines
 Often your engine will require a number of configuration parameters set, some of which should be alterable by the user to reflect their particular needs. For example, a Login System might need a unique Salt value set to encrypt user passwords. This value should be unique to each application.
 
