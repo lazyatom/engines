@@ -21,12 +21,6 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'fileutils'
-
-require 'ruby_extensions'
-require 'dependencies_extensions'
-require 'action_view_extensions'
-require 'action_mailer_extensions'
 
 require 'engines'
 
