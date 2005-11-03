@@ -68,7 +68,7 @@ module ::Engines
       plugins = Dir[File.join(config(:root), "*")]
       RAILS_DEFAULT_LOGGER.debug "considering plugins: #{plugins.inspect}"
       plugins.each { |plugin|
-        engine_name = File.basename(plugins)
+        engine_name = File.basename(plugin)
         if File.exist?(File.join(plugin, "init_engine.rb")) or
            (engine_name =~ /_engine$/)
           # start the engine...
