@@ -69,19 +69,7 @@ module ::ActionView
       # stylesheet_link_tag.
       #
       def engine_stylesheet(engine_name, *sources)
-        options = sources.last.is_a?(Hash) ? sources.pop.stringify_keys : { }
-        new_sources = []
-
-        default = "/#{Engines.config(:public_dir)}/#{engine_name}/stylesheets/#{engine_name}.css"
-        if defined?(RAILS_ROOT) && File.exists?("#{RAILS_ROOT}/public#{default}")
-          new_sources << default
-        end
-        
-        sources.each { |name| 
-          new_sources << "/#{Engines.config(:public_dir)}/#{engine_name}/stylesheets/#{name}.css"
-        }
-        new_sources << options
-        stylesheet_link_tag(*new_sources)
+        stylesheet_link_tag(*convert_public_sources(engine_name, :stylesheet, sources))
       end
 
       # Returns a javascript link tag to the named stylesheet(s) for the given
@@ -101,20 +89,42 @@ module ::ActionView
       # javascript_include_tag.
       #
       def engine_javascript(engine_name, *sources)
-        options = sources.last.is_a?(Hash) ? sources.pop.stringify_keys : { }
-        new_sources = []
-        
-        default = "/#{Engines.config(:public_dir)}/#{engine_name}/javascripts/#{engine_name}.js"
-        if defined?(RAILS_ROOT) && File.exists?("#{RAILS_ROOT}/public#{default}")
-          new_sources << default
-        end
-        
-        sources.each { |name| 
-          new_sources << "/#{Engines.config(:public_dir)}/#{engine_name}/javascripts/#{name}.js"
-        }
-        new_sources << options
-        javascript_include_tag(*new_sources)        
+        javascript_include_tag(*convert_public_sources(engine_name, :javascript, sources))       
       end
+      
+      private
+        # convert the engine public file sources into actual public paths
+        # type:
+        #   :stylesheet
+        #   :javascript
+        # if engine_name does not end in engine, "_engine" is appended automatically. 
+        def convert_public_sources(engine_name, type, sources)
+          options = sources.last.is_a?(Hash) ? sources.pop.stringify_keys : { }
+          new_sources = []
+        
+          full_engine_name = engine_name
+          full_engine_name += "_engine" if !(engine_name =~ /\_engine$/)
+
+          case type
+            when :javascript
+              type_dir = "javascripts"
+              ext = "js"
+            when :stylesheet
+              type_dir = "stylesheets"
+              ext = "css"
+          end
+          
+          default = "/#{Engines.config(:public_dir)}/#{full_engine_name}/#{type_dir}/#{engine_name}"
+          if defined?(RAILS_ROOT) && File.exists?(File.join(RAILS_ROOT, "public", "#{default}.#{ext}"))
+            new_sources << default
+          end
+        
+          sources.each { |name| 
+            new_sources << "/#{Engines.config(:public_dir)}/#{full_engine_name}/#{type_dir}/#{name}"
+          }
+
+          new_sources << options         
+        end
     end
   end
 end

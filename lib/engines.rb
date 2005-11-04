@@ -203,7 +203,7 @@ EOS
     end
 
   
-    private
+    #private
       # Return the directory in which this engine is present
       def get_engine_dir(engine)
         engine_dir=File.join(Engines.config(:root), engine.to_s)
