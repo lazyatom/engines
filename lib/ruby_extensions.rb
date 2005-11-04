@@ -57,13 +57,17 @@ class ::Module
   #
   # Those values can now be accessed by the following method
   #
-  #   MyModule.config :param_one  => "some value"
-  #   MyModule.config :param_two  => 12345
+  #   MyModule.config :param_one  
+  #     => "some value"
+  #   MyModule.config :param_two  
+  #     => 12345
   #
   # ... or, if you have overrriden the method 'config'
   #
-  #   MyModule::CONFIG[:param_one]  => "some value"
-  #   MyModule::CONFIG[:param_two]  => 12345
+  #   MyModule::CONFIG[:param_one]  
+  #     => "some value"
+  #   MyModule::CONFIG[:param_two]  
+  #     => 12345
   #
   # Once a value is stored in the configuration, it will not be altered
   # by subsequent assignments, unless a special flag is given:
@@ -76,20 +80,39 @@ class ::Module
   #
   # The configuration is now:
   #
-  #   MyModule.config :param_one  => "some value" # not changed
-  #   MyModule.config :param_two  => 98765
+  #   MyModule.config :param_one  
+  #     => "some value" # not changed
+  #   MyModule.config :param_two  
+  #     => 98765
   #
-  def config(name, value=nil, override=nil)
-    if !self.const_defined?("CONFIG")
-      self.class_eval("CONFIG = {}")
-    end
+  def config(*args)
     
-    if value != nil
-      if override or self::CONFIG[name] == nil
-        self::CONFIG[name] = value 
-      end
+    raise "config expects at least one argument" if args.empty?
+    
+    # extract the arguments
+    if args[0].is_a?(Hash)
+      # we can't override when using hash'd arguments since
+      # if > 1 hash keys are given, it's impossible to tell which
+      # one is the name of the option, and which is the override flag.
+      args[0].each { |key, value| _handle_config(key, value)}
     else
-      self::CONFIG[name]
+      _handle_config(*args)
     end
   end
+  
+  private
+    # Actually set the config values
+    def _handle_config(name, value=nil, override=false)
+      if !self.const_defined?("CONFIG")
+        self.class_eval("CONFIG = {}")
+      end
+    
+      if value != nil
+        if override or self::CONFIG[name] == nil
+          self::CONFIG[name] = value 
+        end
+      else
+        self::CONFIG[name]
+      end      
+    end
 end
