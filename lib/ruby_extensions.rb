@@ -38,8 +38,11 @@ class ::Module
   # then developers can override this default by defining that constant at
   # some point *before* the module/plugin gets loaded (such as environment.rb)
   def default_constant(name, value)
-    if !self.const_defined?(name.to_s)
-      self.class_eval("#{name.to_s} = #{value.inspect}")
+    if !(name.is_a?(String) or name.is_a?(Symbol))
+      raise "Cannot use a #{name.class.name} ['#{name}'] object as a constant name"
+    end
+    if !self.const_defined?(name)
+      self.class_eval("#{name} = #{value.inspect}")
     end
   end
   
