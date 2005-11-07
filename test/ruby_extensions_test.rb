@@ -58,6 +58,13 @@ class EnginesTest < Test::Unit::TestCase
     assert_equal(123, TestModule.config(:monkey))
   end
   
+  def test_config_get_multiple_values
+    TestModule.config :monkey, 123
+    TestModule.config :donkey, 456
+    assert_equal([123, 456], TestModule.config([:monkey, :donkey]))
+  end
+  
+  
   #
   # Module.default_constant
   #

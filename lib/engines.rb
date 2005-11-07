@@ -54,41 +54,43 @@ module ::Engines
     # * :engine_name => the name within the plugins directory this engine resides, if
     #   different from the first parameter
     #
-    def start(engine=nil, options={})
+    def start(*args)
       
-      if engine == nil
+      options = (args.last.is_a? Hash) ? args.pop : {}
+      
+      if args.empty?
         start_all
         return
-      end
+      else
+        args.each do |engine|
       
-      if options[:engine_name]
-        engine_dir = get_engine_dir(options[:engine_name])
-      else
-        engine_dir = get_engine_dir(engine)
-      end
+          engine_name = options[:engine_name] || engine
+          engine_dir = get_engine_dir(engine_name)
     
-      RAILS_DEFAULT_LOGGER.debug "Trying to start engine '#{engine}' from '#{File.expand_path(engine_dir)}'"
+          RAILS_DEFAULT_LOGGER.debug "Trying to start engine '#{engine}' from '#{File.expand_path(engine_dir)}'"
     
-      # put this engine at the front of the ActiveEngines list
-      Engines::ActiveEngines.unshift engine_dir
+          # put this engine at the front of the ActiveEngines list
+          Engines::ActiveEngines.unshift engine_dir
     
-      # add the code directories of this engine to the load path
-      add_engine_to_load_path(engine_dir)
+          # add the code directories of this engine to the load path
+          add_engine_to_load_path(engine_dir)
     
-      # load the engine's init.rb file
-      startup_file = File.join(engine_dir, "init_engine.rb")
-      if File.exist?(startup_file)
-        eval(IO.read(startup_file))
-      else
-        RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{engine}'..."
-      end
+          # load the engine's init.rb file
+          startup_file = File.join(engine_dir, "init_engine.rb")
+          if File.exist?(startup_file)
+            eval(IO.read(startup_file))
+          else
+            RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{engine}'..."
+          end
     
-      # add the controller path to the Dependency system
-      Controllers.add_path(File.join(engine_dir, 'app', 'controllers'))
+          # add the controller path to the Dependency system
+          Controllers.add_path(File.join(engine_dir, 'app', 'controllers'))
     
-      # copy the files unless indicated otherwise
-      if options[:copy_files] != false
-        copy_engine_files(engine)
+          # copy the files unless indicated otherwise
+          if options[:copy_files] != false
+            copy_engine_files(engine)
+          end
+        end
       end
     end
 

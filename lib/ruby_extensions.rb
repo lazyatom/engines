@@ -115,7 +115,13 @@ class ::Module
           self::CONFIG[name] = value 
         end
       else
-        self::CONFIG[name]
+        # if we pass an array of config keys to config(),
+        # get the array of values back
+        if name.is_a? Array
+          name.map { |c| self::CONFIG[c] }
+        else
+          self::CONFIG[name]
+        end
       end      
     end
 end
