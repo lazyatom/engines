@@ -1,0 +1,7 @@
+*SVN*
+
+- Added preliminary tests for the config() methods module
+
+- Fixed copyright notices to point to DHH, rather than me.
+- Moved extension require statements into lib/engines.rb, so the will be loaded if another module/file calls require 'engines
+- Added a CHANGELOG file (this file)
