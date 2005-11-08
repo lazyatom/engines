@@ -45,15 +45,24 @@ module ::Engines
     # Initializes a Rails Engine by loading the engine's init.rb file and
     # ensuring that any engine controllers are added to the load path.
     # This will also copy any files in a directory named 'public'
-    # into the public webserver directory.
+    # into the public webserver directory. Example usage:
     #
-    # If no engine name is given, all engines will be started.
+    #   Engines.start :login
+    #   Engines.start :login_engine  # equivalent
     #
-    # Options can include
+    # A list of engine names can be specified:
+    #
+    #   Engines.start :login, :user, :wiki
+    #
+    # The engines will be loaded in the order given.
+    # If no engine names are given, all engines will be started.
+    #
+    # Options can include:
     # * :copy_files => true | false
     # * :engine_name => the name within the plugins directory this engine resides, if
     #   different from the first parameter
     #
+    # Note that if a list of engines is given, the options will apply to ALL engines.
     def start(*args)
       
       options = (args.last.is_a? Hash) ? args.pop : {}
