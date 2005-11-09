@@ -30,9 +30,8 @@ module ::Dependencies
     # rather than a library or anything else.
     ['controller', 'helper'].each do |type| 
       if file_name.include?('_' + type)
-        # load in reverse order, so most recently started Engines take precidence
         Engines::ActiveEngines.reverse.each do |engine|
-          engine_file_name = File.join(engine, 'app', "#{type}s",  File.basename(file_name))
+          engine_file_name = File.join(engine, 'app', "#{type}s",  File.basename(file_name) + ".rb")
           if File.exist? engine_file_name
             load? ? load(engine_file_name) : require(engine_file_name)
           end
@@ -40,7 +39,7 @@ module ::Dependencies
       end
     end
 
-    # finally, load any application-specific controller classes.
+A    # finally, load any application-specific controller classes.
     file_name = "#{file_name}.rb" unless ! load? || file_name [-3..-1] == '.rb'
     load? ? load(file_name) : require(file_name)
   end
