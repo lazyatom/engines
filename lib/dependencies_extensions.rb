@@ -39,7 +39,7 @@ module ::Dependencies
       end
     end
 
-A    # finally, load any application-specific controller classes.
+    # finally, load any application-specific controller classes.
     file_name = "#{file_name}.rb" unless ! load? || file_name [-3..-1] == '.rb'
     load? ? load(file_name) : require(file_name)
   end
