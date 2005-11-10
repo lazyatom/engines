@@ -242,7 +242,7 @@ EOS
     # Returns the Engine object for the specified engine, e.g.:
     #    Engines.get(:login)  
     def get(name)
-      ActiveEngines.find { |e| e.name == name.to_s }
+      ActiveEngines.find { |e| e.name == name.to_s || e.name == "#{name}_engine" }
     end
     
     # Returns the Engine object for the current engine, i.e. the engine
