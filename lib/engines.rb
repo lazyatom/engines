@@ -149,7 +149,6 @@ module ::Engines
       old_plugin_paths = []
       # assumes that all engines are at the bottom of the $LOAD_PATH
       while (File.expand_path($LOAD_PATH.last).index(File.expand_path(Engines.config(:root))) == 0) do
-        puts "unshifting: " + $LOAD_PATH.last
         old_plugin_paths.unshift($LOAD_PATH.pop)
       end
 
