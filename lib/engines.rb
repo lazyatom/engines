@@ -138,13 +138,34 @@ module ::Engines
         File.directory?(d)
       }
 
+      # Remove other engines from the $LOAD_PATH bby matching against the engine.root values
+      # in ActiveEngines. Store the removed engines in the order they came off.
+      #
+      # This is a hack - if Ticket http://dev.rubyonrails.com/ticket/2817 is accepted, then 
+      # a new Engines system can be developed which only modifies load paths in one sweep,
+      # thus avoiding this.
+      #
+      
+      old_plugin_paths = []
+      # assumes that all engines are at the bottom of the $LOAD_PATH
+      while (File.expand_path($LOAD_PATH.last).index(File.expand_path(Engines.config(:root))) == 0) do
+        puts "unshifting: " + $LOAD_PATH.last
+        old_plugin_paths.unshift($LOAD_PATH.pop)
+      end
+
+
       # add these LAST on the load path.
       load_paths.reverse.each { |dir| 
         if File.directory?(dir)
           RAILS_DEFAULT_LOGGER.debug "adding #{File.expand_path(dir)} to the load path"
-          $:.push(File.expand_path(dir))  
+          $LOAD_PATH.push(File.expand_path(dir))  
         end
-      }     
+      }
+      
+      # Add the other engines back onto the bottom of the $LOAD_PATH. Put them back on in
+      # the same order.
+      $LOAD_PATH.push(*old_plugin_paths)
+      $LOAD_PATH.uniq!
     end
 
     # Replicates the subdirectories under the engine's /public directory into
