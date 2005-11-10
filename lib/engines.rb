@@ -71,41 +71,15 @@ module ::Engines
         start_all
         return
       else
-        args.each do |engine|
-      
-          engine_name = options[:engine_name] || engine
-          engine_dir = get_engine_dir(engine_name)
-    
-          RAILS_DEFAULT_LOGGER.debug "Trying to start engine '#{engine}' from '#{File.expand_path(engine_dir)}'"
-    
-          # put this engine at the front of the ActiveEngines list
-          Engines::ActiveEngines.unshift engine_dir
-    
-          # add the code directories of this engine to the load path
-          add_engine_to_load_path(engine_dir)
-    
-          # load the engine's init.rb file
-          startup_file = File.join(engine_dir, "init_engine.rb")
-          if File.exist?(startup_file)
-            eval(IO.read(startup_file))
-          else
-            RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{engine}'..."
-          end
-    
-          # add the controller path to the Dependency system
-          Controllers.add_path(File.join(engine_dir, 'app', 'controllers'))
-    
-          # copy the files unless indicated otherwise
-          if options[:copy_files] != false
-            copy_engine_files(engine)
-          end
+        args.each do |engine_name|
+          start_engine(engine_name, options)
         end
       end
     end
 
     # Starts all available engines. Plugins are considered engines if they
     # include an init_engine.rb file, or they are named <something>_engine.
-    def start_all
+    def start_all()
       plugins = Dir[File.join(config(:root), "*")]
       RAILS_DEFAULT_LOGGER.debug "considering plugins: #{plugins.inspect}"
       plugins.each { |plugin|
@@ -118,13 +92,48 @@ module ::Engines
       }
     end
 
+    def start_engine(engine_name, options={})
+
+      current_engine = Engine.new
+      current_engine.name = options[:engine_name] || engine_name
+      current_engine.root = get_engine_dir(engine_name)
+      
+      #engine_name = options[:engine_name] || engine
+      #engine_dir = get_engine_dir(engine_name)
+
+      RAILS_DEFAULT_LOGGER.debug "Trying to start engine '#{current_engine.name}' from '#{File.expand_path(current_engine.root)}'"
+
+      # put this engine at the front of the ActiveEngines list
+      Engines::ActiveEngines.unshift current_engine #engine_dir
+
+      # add the code directories of this engine to the load path
+      add_engine_to_load_path(current_engine) #engine_dir)
+
+      # load the engine's init.rb file
+      startup_file = File.join(current_engine.root, "init_engine.rb")
+      if File.exist?(startup_file)
+        eval(IO.read(startup_file), binding, startup_file)
+        #require startup_file
+      else
+        RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{current_engine.name}'..."
+      end
+
+      # add the controller path to the Dependency system
+      Controllers.add_path(File.join(current_engine.root, 'app', 'controllers'))
+
+      # copy the files unless indicated otherwise
+      if options[:copy_files] != false
+        copy_engine_files(current_engine)
+      end
+    end
+
     # Adds all directories in the /app and /lib directories within the engine
     # to the load path
-    def add_engine_to_load_path(engine_dir)
+    def add_engine_to_load_path(engine)
       # Add ALL paths under the engine root to the load path
-      app_dirs = [engine_dir + "/app/controllers", engine_dir + "/app/models",
-                  engine_dir + "/app/helpers"]
-      lib_dirs = Dir[engine_dir + "/lib/**/*"] + [engine_dir, "lib"]
+      app_dirs = [engine.root + "/app/controllers", engine.root + "/app/models",
+                  engine.root + "/app/helpers"]
+      lib_dirs = Dir[engine.root + "/lib/**/*"] + [engine.root, "lib"]
       load_paths = (app_dirs + lib_dirs).select { |d| 
         File.directory?(d)
       }
@@ -142,7 +151,7 @@ module ::Engines
     # the corresponding public directory.
     def copy_engine_files(engine)
       
-     engine_dir = get_engine_dir(engine)
+     #engine_dir = get_engine_dir(engine)
 
       # create the /public/frameworks directory if it doesn't exist
       public_engine_dir = File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
@@ -162,7 +171,7 @@ EOS
         end
       end
     
-      source = File.join(engine_dir, "public")
+      source = File.join(engine.root, "public") #engine_dir, "public")
       RAILS_DEFAULT_LOGGER.debug "Attempting to copy public engine files from '#{source}'"
     
       # if there is no public directory, just return after this file
@@ -175,7 +184,7 @@ EOS
       RAILS_DEFAULT_LOGGER.debug "source dirs: #{source_dirs.inspect}"
 
       # ensure that we are copying to <something>_engine, whatever the user gives us
-      full_engine_name = engine.to_s
+      full_engine_name = engine.name
       full_engine_name += "_engine" if !(full_engine_name =~ /\_engine$/)
 
 
@@ -184,7 +193,7 @@ EOS
         begin        
 
           # strip out the base path and add the result to the public path
-          relative_dir = dir.gsub(File.join(engine_dir, "public"), full_engine_name)
+          relative_dir = dir.gsub(File.join(engine.root, "public"), full_engine_name)
           target_dir = File.join(public_engine_dir, relative_dir)
           unless File.exist?(target_dir)
             RAILS_DEFAULT_LOGGER.debug "creating directory '#{target_dir}'"
@@ -201,7 +210,7 @@ EOS
       source_files.uniq.each { |file|
         begin
           # change the path from the ENGINE ROOT to the public directory root for this engine
-          target = file.gsub(File.join(engine_dir, "public"), 
+          target = file.gsub(File.join(engine.root, "public"), 
                              File.join(public_engine_dir, full_engine_name))
           unless File.exist?(target) && FileUtils.identical?(file, target)
             RAILS_DEFAULT_LOGGER.debug "copying file '#{file}' to '#{target}'"
@@ -216,18 +225,48 @@ EOS
   
     #private
       # Return the directory in which this engine is present
-      def get_engine_dir(engine)
-        engine_dir=File.join(Engines.config(:root), engine.to_s)
+      def get_engine_dir(engine_name)
+        engine_dir=File.join(Engines.config(:root), engine_name.to_s)
 
         if !File.exist?(engine_dir)
           # try adding "_engine" to the end of the path.
           engine_dir += "_engine"
           if !File.exist?(engine_dir)
-            raise "Cannot find the engine '#{engine}' in either /vendor/plugins/#{engine} or /vendor/plugins/#{engine}_engine..."
+            raise "Cannot find the engine '#{engine_name}' in either /vendor/plugins/#{engine} or /vendor/plugins/#{engine}_engine..."
           end
         end      
       
         engine_dir
-      end  
+      end
+    
+    # Returns the Engine object for the specified engine, e.g.:
+    #    Engines.get(:login)  
+    def get(name)
+      ActiveEngines.find { |e| e.name == name.to_s }
+    end
+    
+    # Returns the Engine object for the current engine, i.e. the engine
+    # in which the currently executing code lies.
+    def current()
+      #puts caller.inspect
+      #puts ">>> " + caller[0]
+      current_file = caller[0]
+      ActiveEngines.find do |engine|
+        File.expand_path(current_file).index(File.expand_path(engine.root)) == 0
+      end
+    end    
   end 
+end
+
+# A simple class for holding information about loaded engines
+class Engine
+  
+  # Returns the base path of this engine
+  attr_accessor :root
+  
+  # Returns the name of this engine
+  attr_reader :name
+  
+  def name=(val) @name = val.to_s end
+  def to_s() "Engine<#{@name}>"   end
 end

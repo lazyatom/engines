@@ -111,7 +111,7 @@ module ActionMailer
         paths = [template_path]
         Engines::ActiveEngines.each { |engine|
           # add a path for every engine if one exists.
-          engine_template_path = File.join(engine, "app", "views", mailer_name)
+          engine_template_path = File.join(engine.root, "app", "views", mailer_name)
           paths << engine_template_path if File.exists?(engine_template_path)
         }
         paths

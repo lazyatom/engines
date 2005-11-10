@@ -38,7 +38,7 @@ module ::ActionView
         # Otherwise, check in the engines to see if the template can be found there.
         # Load this in order so that more recently started Engines will take priority.
         Engines::ActiveEngines.each do |engine|
-          site_specific_path = File.join(engine.to_s, 'app', 'views',  template_path.to_s + '.' + extension.to_s)
+          site_specific_path = File.join(engine.root, 'app', 'views',  template_path.to_s + '.' + extension.to_s)
           return site_specific_path if File.exist?(site_specific_path)
         end
 

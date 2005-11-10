@@ -31,7 +31,7 @@ module ::Dependencies
     ['controller', 'helper'].each do |type| 
       if file_name.include?('_' + type)
         Engines::ActiveEngines.reverse.each do |engine|
-          engine_file_name = File.join(engine, 'app', "#{type}s",  File.basename(file_name))
+          engine_file_name = File.join(engine.root, 'app', "#{type}s",  File.basename(file_name))
           engine_file_name += '.rb' unless engine_file_name[-3..-1] == '.rb'
           if File.exist? engine_file_name
             load? ? load(engine_file_name) : require(engine_file_name)
