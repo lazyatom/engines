@@ -16,7 +16,7 @@ module Test
         end
         # Copy the file across, unless the destination is identical.
         begin
-          unless unless File.exist?(destination_file) && FileUtils.identical?(template_file, destination_file)
+          unless File.exist?(destination_file) && FileUtils.identical?(template_file, destination_file)
             FileUtils.cp(template_file, destination_file)
           end
         rescue Exception => e
