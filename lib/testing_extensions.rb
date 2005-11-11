@@ -23,6 +23,11 @@ module Test
           raise "Couldn't create fixture file: " + e
         end
       end
+      
+      # Returns any object from the given fixtures
+      def fixture_object(fixture_name, object_name)
+        send(fixture_name.to_sym, object_name)
+      end
     end
   end
 end
