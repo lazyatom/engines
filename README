@@ -2,18 +2,19 @@
 
 === Quickstart
 
-1. Install the Rails Engines plugin into your plugins directory
+Here's an *example* of how you might go about using Rails Engines. Please bear in mind that actual Engines may differ from this, but these are the steps you will *typically* have to take. Refer to individual Engine documentation for specific installation instructions. Anyway, on with the show:
 
-2. Install your engine into the plugins directory (note both of these steps will soon be made somewhat <i>automagic</i> by the new Rails script/plugin command coming in Rails 1.0)
+1. Install the Rails Engines plugin into your plugins directory. You'll probably need to accept the SSL certificate here for the OpenSVN servers. For example:
+    $ script/plugin install engines
+  or
+    % svn co https://opensvn.csie.org/rails_engines/plugins/engines <MY_RAILS_APP>/vendor/plugins/engines
+
+2. Install your engine into the plugins directory in a similar way.
 
 3. Create the RDoc for the engine so you know what's going on:
-     $ cd vendor/plugins/my_engine
-     $ rake rdoc
+     $ rake plugindoc
 
-4. Initialize any database schema provided:
-     $ rake db_schema_import      # (still within the plugin/my_engine directory)
-   Beware that this might affect any existing database tables you have installed! You are STRONGLY recommended to inspect the <tt>db/schema.rb</tt> file to see exactly what
-   running it might change.
+4. Initialize any database schema provided. The Engine may provide Rake tasks to do this for you. Beware that accepting an Engine schema might affect any existing database tables you have installed! You are STRONGLY recommended to inspect the <tt>db/schema.rb</tt> file to see exactly what running it might change.
 
 5. Add configuration to <tt>environment.rb</tt>:
    e.g.
