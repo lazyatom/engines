@@ -207,6 +207,13 @@ EOS
       full_engine_name = engine.name
       full_engine_name += "_engine" if !(full_engine_name =~ /\_engine$/)
 
+      # Create the engine_files/<something>_engine dir if it doesn't exist
+      new_engine_dir = File.join(public_engine_dir, full_engine_name)
+      if !File.exists?(new_engine_dir)
+        # Create <something>_engine dir with a message
+        RAILS_DEFAULT_LOGGER.debug "Creating #{full_engine_name} public dir"
+        FileUtils.mkdir_p(new_engine_dir)
+      end
 
       # create all the directories, transforming the old path into the new path
       source_dirs.uniq.each { |dir|
@@ -217,7 +224,7 @@ EOS
           target_dir = File.join(public_engine_dir, relative_dir)
           unless File.exist?(target_dir)
             RAILS_DEFAULT_LOGGER.debug "creating directory '#{target_dir}'"
-            FileUtils.mkdir_p(File.join(public_engine_dir, relative_dir))
+            FileUtils.mkdir_p(target_dir)
           end
         rescue Exception => e
           raise "Could not create directory #{target_dir}: \n" + e
