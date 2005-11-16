@@ -26,6 +26,7 @@ require 'dependencies_extensions'
 require 'action_view_extensions'
 require 'action_mailer_extensions'
 require 'testing_extensions'
+require 'migration_extensions'
 
 
 # Holds the Rails Engine loading logic and default constants
@@ -294,6 +295,12 @@ class Engine
   # Returns the name of this engine
   attr_reader :name
   
-  def name=(val) @name = val.to_s end
-  def to_s() "Engine<#{@name}>"   end
+  def name=(val) 
+    @name = val.to_s 
+    @name += "_engine" if !(@name =~ /\_engine$/) # add _engine
+  end
+  
+  def to_s() 
+    "Engine<#{@name}>"
+  end
 end
