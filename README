@@ -141,7 +141,7 @@ your whole database. You need to inspect these things. YOU do. If you
 run these voodoo commands and your database essplodes because you
 didn't double double double check what was going on, your embarassment
 will be infinite. And your project will be skroo'd if the migration
-isn't irreversible.
+is irreversible.
 
 That said, if you are working in a team and you all trust each other,
 which is hopefully true, this can be quite useful.
