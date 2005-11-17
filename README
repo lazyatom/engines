@@ -5,19 +5,24 @@
 Here's an *example* of how you might go about using Rails Engines. Please bear in mind that actual Engines may differ from this, but these are the steps you will *typically* have to take. Refer to individual Engine documentation for specific installation instructions. Anyway, on with the show:
 
 1. Install the Rails Engines plugin into your plugins directory. You'll probably need to accept the SSL certificate here for the OpenSVN servers. For example:
+
     $ script/plugin install engines
-  or
-    % svn co https://opensvn.csie.org/rails_engines/plugins/engines <MY_RAILS_APP>/vendor/plugins/engines
+
+ or
+
+    $ svn co https://opensvn.csie.org/rails_engines/plugins/engines <MY_RAILS_APP>/vendor/plugins/engines
 
 2. Install your engine into the plugins directory in a similar way.
 
 3. Create the RDoc for the engine so you know what's going on:
+
      $ rake plugindoc
 
 4. Initialize any database schema provided. The Engine may provide Rake tasks to do this for you. Beware that accepting an Engine schema might affect any existing database tables you have installed! You are STRONGLY recommended to inspect the <tt>db/schema.rb</tt> file to see exactly what running it might change.
 
 5. Add configuration to <tt>environment.rb</tt>:
    e.g.
+
       # Add your application configuration here
       module MyEngine
         config :top_speed, "MegaTurboFast"
@@ -26,6 +31,7 @@ Here's an *example* of how you might go about using Rails Engines. Please bear i
       Engine.start :my_engine
 
 6. Run your server!
+
       $ script/server
 
 
@@ -47,7 +53,7 @@ Once the Rails Core team decides on a suitable method for packaging plugins, Eng
 
 
 = Building an Engine
-In your Rails application, you should have a directory called 'engines' in the vendor directory (alongside plugins). This directory will contain one subdirectory for each engine. Here's a sample rails application with a detailed listing of an example engines as a concrete example:
+Here's a sample rails application with a detailed listing of an example engines as a concrete example:
 
   RAILS_ROOT
     |- app
@@ -122,6 +128,35 @@ You can override controller behaviour by replacing individual controller methods
 
 === Model/Lib Tweaks
 Alas, tweaking model objects isn't quite so easy (yet). If you need to change the behaviour of model objects, you'll need to copy the model file from the engine into <tt>/app/models</tt> and edit the methods yourself. Library code can be overridden in a similar way.
+
+
+= Public Files
+
+If the Engine includes a <tt>public</tt> directory, its contents will be mirrored into <tt>RAILS_ROOT/public/engine_files/&lt;engine_name&gt;/</tt> so that these files can be served by your webserver to browsers and users over the internet.
+
+Engines also provides two convenience methods for loading stylesheets and javascript files in your layouts: <tt>engine_stylesheet</tt> and <tt>engine_javascript</tt>.
+
+=== Engine Stylesheets
+
+  <%= engine_stylesheet "my_engine" %>
+
+will include <tt>RAILS_ROOT/public/&lt;engine_files&gt;/my_engine/stylesheets/my_engine.css</tt> in your layout. If you have more than one stylesheet, you can include them in the same call:
+
+  <%= engine_stylesheet "my_engine", "stylesheet_2", "another_one" %>
+
+will give you:
+
+    <link href="/engine_files/my_engine/stylesheets/my_engine.css" media="screen" rel="Stylesheet" type="text/css" />
+    <link href="/engine_files/my_engine/stylesheets/stylesheet_2.css" media="screen" rel="Stylesheet" type="text/css" />
+    <link href="/engine_files/my_engine/stylesheets/another_one.css" media="screen" rel="Stylesheet" type="text/css" />
+
+in your rendered layout.
+
+=== Engine Javascripts
+
+The <tt>engine_javascript</tt> command works in exactly the same way as above.
+
+
 
 
 = Databases and Engines
