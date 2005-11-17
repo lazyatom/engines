@@ -90,7 +90,7 @@ From within <tt>init_engine.rb</tt> you should load any libraries from your <tt>
 Calling either Engines.start (with no arguments) or Engines.start_all will load all engines available. Please note that your plugin can only be detected as an engine by the presence of an 'init_engine.rb' file, or if the engine is in a directory named <something>_engine. If neither of these conditions hold, then your engine will not be loaded by Engines.start() or Engines.start_all().
 
 
-=== Configuring Engines
+= Configuring Engines
 Often your engine will require a number of configuration parameters set, some of which should be alterable by the user to reflect their particular needs. For example, a Login System might need a unique Salt value set to encrypt user passwords. This value should be unique to each application.
 
 Engines provides a simple mechanism to handle this, and it's already been hinted at above. Within any module, a new method is now available: <tt>config</tt>. This method creates a special <tt>CONFIG</tt> Hash object within the Module it is called, and can be used to store your parameters. For a user to set these parameters, they should reopen the module (before the corresponding Engine.start call), as follows:
@@ -120,10 +120,88 @@ You can override controller behaviour by replacing individual controller methods
 ... and that's it. Your custom code will be mixed in to the engine controller, replacing its old method with your custom code.
 
 
-=== Model Tweaks
-Alas, tweaking model objects isn't quite so easy (yet). If you need to change the behaviour of model objects, you'll need to copy the model file from the engine into <tt>/app/models</tt> and edit the methods yourself. We're working on improving this.
+=== Model/Lib Tweaks
+Alas, tweaking model objects isn't quite so easy (yet). If you need to change the behaviour of model objects, you'll need to copy the model file from the engine into <tt>/app/models</tt> and edit the methods yourself. Library code can be overridden in a similar way.
 
 
+= Databases and Engines
 
-= TODO / Future Work
-* some kind of testing? Integrate with the testing stuff at  http://techno-weenie.net/svn/projects/test/ maybe?
+Engine schema information can be handled using similar mechanisms to your normal application schemas.
+
+== CAVEAT EMPTOR!
+
+I.E. Big Huge Warning In Flashing Lights.
+
+PLEASE, PLEASE, PLEASE bear in mind that if you are letting someone
+ELSE have a say in what tables you are using, you're basically opening
+your application schema open to potential HAVOC. I cannot stress how
+serious this is. It is YOUR responsibility to ensure that you trust
+the schema and migration information, and that it's not going to drop
+your whole database. You need to inspect these things. YOU do. If you
+run these voodoo commands and your database essplodes because you
+didn't double double double check what was going on, your embarassment
+will be infinite. And your project will be skroo'd if the migration
+isn't irreversible.
+
+That said, if you are working in a team and you all trust each other,
+which is hopefully true, this can be quite useful.
+
+
+== Migrating Engines
+
+To migrate all engines to the latest version:
+
+ rake engines_migrate
+
+To migrate a single engine, for example the login engine:
+
+ rake engines_migrate ENGINE=login  (or login_engine)
+
+To migrate a single engine to a specific revision:
+
+ rake engines_migrate ENGINE=login VERSION=4
+
+This:
+
+ rake engines_migrate VERSION=1
+
+... will not work, because we felt it was too dangerous to allow ALL
+engines to be migrated to a specific version, since such versions
+might be incompatible.
+
+
+= Testing Engines
+
+The Engines plugin comes with mechanisms to help test Engines within a developer's own application. The testing extensions enable developers to load fixtures into specific
+tables irrespective of the name of the fixtures file. This work is heavily based on
+patches made by Duane Johnson (canadaduane), viewable at
+http://dev.rubyonrails.org/ticket/1911
+
+Engine developers should supply fixture files in the <engine>/test/fixtures directory
+as normal. Within their tests, they should load the fixtures using the 'fixture' command
+(rather than the normal 'fixtures' command). For example:
+
+  class UserTest < Test::Unit::TestCase
+    fixture :users, :table_name => LoginEngine.config(:user_table), :class_name => "User"
+ 
+    ...
+
+This will ensure that the fixtures/users.yml file will get loaded into the correct
+table, and will use the correct model object class.
+
+Your engine should provide a test_helper.rb file in <engine>/test, the contents of which should include the following:
+
+  # Load the default rails test helper - this will load the environment.
+	require File.dirname(__FILE__) + '/../../../../test/test_helper'
+
+	# ensure that the Engines testing enhancements are loaded and will override Rails own
+	# code where needed. This line is very important!
+	require File.join(Engines.config(:root), "engines", "lib", "testing_extensions")
+
+	# Load the schema - if migrations have been performed, this will be up to date.
+	load(File.dirname(__FILE__) + "/../db/schema.rb")
+
+	# set up the fixtures location to use your engine's fixtures
+	Test::Unit::TestCase.fixture_path = File.dirname(__FILE__)  + "/fixtures/"
+	$LOAD_PATH.unshift(Test::Unit::TestCase.fixture_path)
+
