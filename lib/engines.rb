@@ -131,21 +131,26 @@ module ::Engines
     # Adds all directories in the /app and /lib directories within the engine
     # to the load path
     def add_engine_to_load_path(engine)
+      
+      # remove the lib directory added by load_plugin, and place it in the corrent
+      # location *after* the application/lib. This can be removed when 
+      # http://dev.rubyonrails.org/ticket/2910 is fixed.
+      app_lib_index = $LOAD_PATH.index(File.join(RAILS_ROOT, "lib"))
+      engine_lib = File.join(engine.root, "lib")
+      if app_lib_index
+        $LOAD_PATH.delete(engine_lib)
+        $LOAD_PATH.insert(app_lib_index, engine_lib)
+      end
+      
       # Add ALL paths under the engine root to the load path
-      app_dirs = [engine.root + "/app/controllers", engine.root + "/app/models",
-                  engine.root + "/app/helpers"]
-      lib_dirs = Dir[engine.root + "/lib/**/*"] + [engine.root, "lib"]
+      app_dirs = Dir[engine.root + "/app/**/*"]
+      lib_dirs = Dir[engine.root + "/lib/**/*"]
       load_paths = (app_dirs + lib_dirs).select { |d| 
         File.directory?(d)
       }
 
-      # Remove other engines from the $LOAD_PATH bby matching against the engine.root values
+      # Remove other engines from the $LOAD_PATH by matching against the engine.root values
       # in ActiveEngines. Store the removed engines in the order they came off.
-      #
-      # This is a hack - if Ticket http://dev.rubyonrails.com/ticket/2817 is accepted, then 
-      # a new Engines system can be developed which only modifies load paths in one sweep,
-      # thus avoiding this.
-      #
       
       old_plugin_paths = []
       # assumes that all engines are at the bottom of the $LOAD_PATH
