@@ -1,36 +1,21 @@
-require 'fileutils'
+# The Engines testing extensions enable developers to load fixtures into specific
+# tables irrespective of the name of the fixtures file. This work is heavily based on
+# patches made by Duane Johnson (canadaduane), viewable at
+# http://dev.rubyonrails.org/ticket/1911
+#
+# Engine developers should supply fixture files in the <engine>/test/fixtures directory
+# as normal. Within their tests, they should load the fixtures using the 'fixture' command
+# (rather than the normal 'fixtures' command). For example:
+#
+#   class UserTest < Test::Unit::TestCase
+#     fixture :users, :table_name => LoginEngine.config(:user_table), :class_name => "User"
+#    
+#     ...
+#
+# This will ensure that the fixtures/users.yml file will get loaded into the correct
+# table, and will use the correct model object class.
 
-module Test
-  module Unit
-    class TestCase  
-      # Create a fixtures file based on the template file 
-      # (<fixture_path>/templates/<fixture_template_name>.yml), and create a suitable
-      # fixture file in the fixture_path directory to be loaded into the table given by
-      # table_name.
-      def self.set_fixtures_table(fixture_file_name, table_name)
-        # presume that the template files are in fixture_path + "/templates"
-        template_file = File.join(fixture_path, "templates", fixture_file_name.to_s + ".yml")
-        destination_file = File.join(fixture_path, table_name.to_s + ".yml")
-        if !File.exists?(template_file)
-          raise "Cannot find fixture template file '#{template_file}'!"
-        end
-        # Copy the file across, unless the destination is identical.
-        begin
-          unless File.exist?(destination_file) && FileUtils.identical?(template_file, destination_file)
-            FileUtils.cp(template_file, destination_file)
-          end
-        rescue Exception => e
-          raise "Couldn't create fixture file: " + e
-        end
-      end
-      
-      # Returns any object from the given fixtures
-      def fixture_object(fixture_name, object_name)
-        send(fixture_name.to_sym, object_name)
-      end
-    end
-  end
-end
+
 
 
 # A FixtureGroup is a set of fixtures identified by a name.  Normally, this is the name of the
@@ -88,87 +73,68 @@ class FixtureGroup
   end
 end
 
+class Fixtures < YAML::Omap
 
-class Fixtures < Hash
- DEFAULT_FILTER_RE = /\.ya?ml$/
-  
-  cattr_accessor :all_loaded_fixtures
-  self.all_loaded_fixtures = {}
+  def self.instantiate_fixtures(object, fixture_group_name, fixtures, load_instances=true)
+    old_logger_level = ActiveRecord::Base.logger.level
+    ActiveRecord::Base.logger.level = Logger::ERROR
 
-  class << self
-    def instantiate_fixtures(object, fixture_group_name, fixtures, load_instances=true)
-      old_logger_level = ActiveRecord::Base.logger.level
-      ActiveRecord::Base.logger.level = Logger::ERROR
-
-      # table_name.to_s.gsub('.','_') replaced by 'fixture_group_name'
-      object.instance_variable_set "@#{fixture_group_name}", fixtures
-      if load_instances
+    # table_name.to_s.gsub('.','_') replaced by 'fixture_group_name'
+    object.instance_variable_set "@#{fixture_group_name}", fixtures
+    if load_instances
+      ActiveRecord::Base.silence do
         fixtures.each do |name, fixture|
           if model = fixture.find
             object.instance_variable_set "@#{name}", model
           end
         end
       end
-
-      ActiveRecord::Base.logger.level = old_logger_level
-    end
- 
-    def instantiate_all_loaded_fixtures(object, load_instances=true)
-      all_loaded_fixtures.each do |fixture_group_name, fixtures|
-        Fixtures.instantiate_fixtures(object, fixture_group_name, fixtures, load_instances)
-      end
     end
 
-    def create_fixtures(fixtures_directory, *fixture_groups)
-      connection = block_given? ? yield : ActiveRecord::Base.connection
-      old_logger_level = ActiveRecord::Base.logger.level
-      fixture_groups.flatten!
-      
-      # Backwards compatibility: Allow an array of table names to be passed in, but just use them
-      # to create an array of FixtureGroup objects
-      if not fixture_groups.empty? and fixture_groups.first.is_a?(String)
-        fixture_groups = FixtureGroup.array_from_names(fixture_groups)
-      end
- 
-      begin
-        ActiveRecord::Base.logger.level = Logger::ERROR
- 
-        fixtures_map = {}
-        fixtures = fixture_groups.map do |group|
-          fixtures_map[group.group_name] = Fixtures.new(connection, fixtures_directory, group)
-        end               
-        # Make sure all refs to all_loaded_fixtures use group_name as hash index, not table_name
-        all_loaded_fixtures.merge! fixtures_map  
+    ActiveRecord::Base.logger.level = old_logger_level
+  end
 
-        connection.transaction do
-          fixtures.reverse.each { |fixture| fixture.delete_existing_fixtures }
-          fixtures.each { |fixture| fixture.insert_fixtures }
-        end
+  # this doesn't really need to be overridden...
+  def self.instantiate_all_loaded_fixtures(object, load_instances=true)
+    all_loaded_fixtures.each do |fixture_group_name, fixtures|
+      Fixtures.instantiate_fixtures(object, fixture_group_name, fixtures, load_instances)
+    end
+  end
 
-        reset_sequences(connection, fixture_groups) if connection.is_a?(ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
+  def self.create_fixtures(fixtures_directory, *fixture_groups)
+    connection = block_given? ? yield : ActiveRecord::Base.connection
+    fixture_groups.flatten!
+    
+    # Backwards compatibility: Allow an array of table names to be passed in, but just use them
+    # to create an array of FixtureGroup objects
+    if not fixture_groups.empty? and fixture_groups.first.is_a?(String)
+      fixture_groups = FixtureGroup.array_from_names(fixture_groups)
+    end
 
-        return fixtures.size > 1 ? fixtures : fixtures.first
-      ensure
-        ActiveRecord::Base.logger.level = old_logger_level
-       end
-     end
- 
-    # Start PostgreSQL fixtures at id 1.  Skip tables without models
-    # and models with nonstandard primary keys.
-    def reset_sequences(connection, fixture_groups)
-      fixture_groups.flatten.each do |group|
-        if klass = group.class_name.constantize rescue nil
-          pk = klass.columns_hash[klass.primary_key]
-          if pk and pk.type == :integer
-            connection.execute(
-              "SELECT setval('#{group.table_name}_#{pk.name}_seq', (SELECT COALESCE(MAX(#{pk.name}), 0)+1 FROM #{group.table_name}), false)", 
-              'Setting Sequence'
-            )
+    ActiveRecord::Base.silence do
+      fixtures_map = {}
+      fixtures = fixture_groups.map do |group|
+        fixtures_map[group.group_name] = Fixtures.new(connection, fixtures_directory, group)
+      end 
+      # Make sure all refs to all_loaded_fixtures use group_name as hash index, not table_name
+      all_loaded_fixtures.merge! fixtures_map 
+
+      connection.transaction do
+        fixtures.reverse.each { |fixture| fixture.delete_existing_fixtures }
+        fixtures.each { |fixture| fixture.insert_fixtures }
+        
+        # Cap primary key sequences to max(pk).
+        if connection.respond_to?(:reset_pk_sequence!)
+          table_names.each do |table_name|
+            connection.reset_pk_sequence!(table_name)
           end
         end
       end
+
+      return fixtures.size > 1 ? fixtures : fixtures.first
     end
   end
+
  
   attr_accessor :connection, :fixtures_directory, :file_filter
   attr_accessor :fixture_group
@@ -208,11 +174,15 @@ class Fixtures < Hash
     def read_yaml_fixture_files
       # YAML fixtures
       begin
-        yaml = YAML::load(erb_render(IO.read(yaml_file_path)))
-        yaml.each { |name, data| self[name] = Fixture.new(data, @fixture_group.class_name) } if yaml
+        if yaml = YAML::load(erb_render(IO.read(yaml_file_path)))
+          yaml = yaml.value if yaml.respond_to?(:type_id) and yaml.respond_to?(:value)
+          yaml.each do |name, data|
+            self[name] = Fixture.new(data, fixture_group.class_name)
+          end
+        end
       rescue Exception=>boom
         raise Fixture::FormatError, "a YAML error occured parsing #{yaml_file_path}. Please note that YAML must be consistently indented using spaces. Tabs are not allowed. Please have a look at http://www.yaml.org/faq.html\nThe exact error was:\n  #{boom.class}: #{boom}"
-      end
+      end      
     end
 
     def read_csv_fixture_files
@@ -256,12 +226,12 @@ class Fixtures < Hash
  
     def fixture_path_with_extension(ext)
       File.join(@fixtures_directory, @fixture_group.file_name + ext)
-    end      
+    end 
 
     def erb_render(fixture_content)
       ERB.new(fixture_content).result
     end
-  end
+
 end
 
 module Test #:nodoc:
@@ -310,6 +280,7 @@ module Test #:nodoc:
       end
 
       def self.setup_fixture_accessors(fixture_groups_override=nil)
+        puts "setting up accessors with fixture_groups: " + fixture_groups.inspect
         (fixture_groups_override || fixture_groups).each do |group|
           define_method(group.group_name) do |fixture, *optionals|
             force_reload = optionals.shift
