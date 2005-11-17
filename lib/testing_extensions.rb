@@ -280,7 +280,6 @@ module Test #:nodoc:
       end
 
       def self.setup_fixture_accessors(fixture_groups_override=nil)
-        puts "setting up accessors with fixture_groups: " + fixture_groups.inspect
         (fixture_groups_override || fixture_groups).each do |group|
           define_method(group.group_name) do |fixture, *optionals|
             force_reload = optionals.shift
