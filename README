@@ -240,3 +240,16 @@ Your engine should provide a test_helper.rb file in <engine>/test, the contents 
 	Test::Unit::TestCase.fixture_path = File.dirname(__FILE__)  + "/fixtures/"
 	$LOAD_PATH.unshift(Test::Unit::TestCase.fixture_path)
 
+== Loading Fixtures
+
+An additional helpful task for loading fixture data is also provided (thanks to Joe Van Dyk):
+
+  rake load_plugin_fixtures
+  rake load_plugin_fixtures PLUGIN=login_engine
+  
+will load the engine fixture data into your development database.
+
+=== Important Caveat
+Unlike the new 'fixture' directive described above, this task currently relies on you ensuring that the table name to load fixtures into is the same as the name of the fixtures file you are trying to load. If you are using defaults, this should be fine. If you have changed table names, you will need to rename your fixtures files (and possibly update your tests to reflect this too).
+
+You should also note that fixtures typically tend to depend on test configuration information (such as test salt values), so not all data will be usable in fixture form.

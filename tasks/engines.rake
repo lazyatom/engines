@@ -31,3 +31,47 @@ task :engine_migrate => :environment do
     end
   end
 end
+
+# this is just a rip-off from the plugin stuff in railties/lib/tasks/documentation.rake, 
+# because the default plugindoc stuff doesn't support subdirectories like app.
+
+AllEngines = FileList['vendor/plugins/*_engine'].map {|engine| File.basename(engine)}
+# Define doc tasks for each engine
+AllEngines.each do |engine|
+  task :"#{engine}_enginedoc" => :environment do
+    engine_base   = "vendor/plugins/#{engine}"
+    options       = []
+    files         = Rake::FileList.new
+    options << "-o doc/plugins/#{engine}"
+    options << "--title '#{engine.titlecase} Documentation'"
+    options << '--line-numbers --inline-source'
+    options << '--all' # include protected methods
+    options << '-T html'
+
+    files.include("#{engine_base}/lib/**/*.rb")
+    files.include("#{engine_base}/app/**/*.rb")
+    if File.exists?("#{engine_base}/README")
+      files.include("#{engine_base}/README")    
+      options << "--main '#{engine_base}/README'"
+    end
+    files.include("#{engine_base}/CHANGELOG") if File.exists?("#{engine_base}/CHANGELOG")
+
+    options << files.to_s
+
+    sh %(rdoc #{options * ' '})
+  end
+end
+
+desc "Generate documation for all installed engines"
+task :enginedoc => AllEngines.map {|engine| :"#{engine}_enginedoc"}
+
+
+desc "Load plugin/engine fixtures into the current environment's database."
+task :load_plugin_fixtures => :environment do
+  require 'active_record/fixtures'
+  ActiveRecord::Base.establish_connection(RAILS_ENV.to_sym)
+  plugin = ENV['PLUGIN'] || '*'
+  Dir.glob(File.join(RAILS_ROOT, 'vendor', 'plugins', plugin, 'test', 'fixtures', '*.yml')).each do |fixture_file|
+    Fixtures.create_fixtures(File.dirname(fixture_file), File.basename(fixture_file, '.*'))
+  end
+end
