@@ -265,7 +265,7 @@ EOS
           # try adding "_engine" to the end of the path.
           engine_dir += "_engine"
           if !File.exist?(engine_dir)
-            raise "Cannot find the engine '#{engine_name}' in either /vendor/plugins/#{engine} or /vendor/plugins/#{engine}_engine..."
+            raise "Cannot find the engine '#{engine_name}' in either /vendor/plugins/#{engine_name} or /vendor/plugins/#{engine_name}_engine..."
           end
         end      
       
