@@ -313,4 +313,8 @@ class Engine
   def to_s() 
     "Engine<#{@name}>"
   end
+  
+  def public_dir()
+    File.join("/", Engines.config(:public_dir), name)
+  end
 end
