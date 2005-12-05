@@ -119,8 +119,12 @@ module ::Engines
         RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{current_engine.name}'..."
       end
 
-      # add the controller path to the Dependency system
-      Controllers.add_path(File.join(current_engine.root, 'app', 'controllers'))
+      # add the controller & component path to the Dependency system
+      engine_controllers = File.join(current_engine.root, 'app', 'controllers')
+      engine_components = File.join(current_engine.root, 'components')
+      
+      Controllers.add_path(engine_controllers) if File.exist?(engine_controllers)
+      Controllers.add_path(engine_components) if File.exist?(engine_components)
 
       # copy the files unless indicated otherwise
       if options[:copy_files] != false
@@ -139,13 +143,14 @@ module ::Engines
       engine_lib = File.join(engine.root, "lib")
       if app_lib_index
         $LOAD_PATH.delete(engine_lib)
-        $LOAD_PATH.insert(app_lib_index, engine_lib)
+        $LOAD_PATH.insert(app_lib_index+1, engine_lib)
       end
       
       # Add ALL paths under the engine root to the load path
       app_dirs = Dir[engine.root + "/app/**/*"]
+      component_dir = Dir[engine.root + "/components"]
       lib_dirs = Dir[engine.root + "/lib/**/*"]
-      load_paths = (app_dirs + lib_dirs).select { |d| 
+      load_paths = (app_dirs + component_dir + lib_dirs).select { |d| 
         File.directory?(d)
       }
 
