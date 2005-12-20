@@ -28,7 +28,7 @@ Here's an *example* of how you might go about using Rails Engines. Please bear i
         config :top_speed, "MegaTurboFast"
       end
  
-      Engine.start :my_engine
+      Engines.start :my_engine
 
 6. Run your server!
 
