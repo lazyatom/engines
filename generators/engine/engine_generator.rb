@@ -94,19 +94,22 @@ class License
 
   def select_license
     # list all the licenses in the licenses directory
-    licenses = Dir.entries(File.join(@source_root, 'licenses')).grep(/_license/)
+    licenses = Dir.entries(File.join(@source_root, 'licenses'))
     puts "Please select a license:"
-    licenses.sort.each_index do |license_index|
-      puts "#{license_index}) #{licenses[license_index].sub(/_license$/, '').upcase}"
+    licenses.sort.each_with_index do |license, index|
+      puts "#{index}) #{licenses[index]}"
     end
-    puts "If the license you want to use is not listed, then add a xxx_license file to the #{File.join(@source_root, 'licenes')}"
-    while license_index = gets.chomp
-      next unless license_index =~ /^[0-9]+$/
-      break if license_index.to_i >=0 && license_index.to_i <= licenses.length
+    puts "If the license you want to use is not listed, then add a template file to #{File.join(@source_root, 'licenses')} (or consider submitting a patch to the Engines plugin itself)"
+    while choice = gets.chomp
+      if (choice !~ /^[0-9]+$/)
+        print "Please enter a number: "
+        next
+      end
+      break if choice.to_i >=0 && choice.to_i <= licenses.length
     end
       
-    @license = licenses[license_index.to_i]
-    puts "#{@license.sub(/_license$/, '').upcase} selected"
+    @license = licenses[choice.to_i]
+    puts "'#{@license}' selected"
   end
 
   def to_s
