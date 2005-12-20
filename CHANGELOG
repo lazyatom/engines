@@ -1,6 +1,17 @@
 *SVN*
 
+v172
+
+- Added engine generator for creation of new engines
+- Fixed 'Engine' typo in README
+- Fixed bug in fixtures extensions
+- Fixed /lib path management bug
+- Added method to determine public directory location from Engine object
+- Fixed bug in the error message in get_engine_dir()
+- Added proper component loading
 - Added preliminary tests for the config() methods module
+
+pre-v170
 
 - Fixed copyright notices to point to DHH, rather than me.
 - Moved extension require statements into lib/engines.rb, so the will be loaded if another module/file calls require 'engines

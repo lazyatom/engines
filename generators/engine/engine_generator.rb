@@ -72,12 +72,12 @@ class Author
   end
 
   def set_name
-    puts "Please enter the author's name"
+    print "Please enter the author's name: "
     @name = gets.chomp
   end
 
   def set_email
-    puts "Please enter the author's email"
+    print "Please enter the author's email: "
     @email = gets.chomp
   end
 
@@ -94,15 +94,15 @@ class License
 
   def select_license
     # list all the licenses in the licenses directory
-    licenses = Dir.entries(File.join(@source_root, 'licenses'))
-    puts "Please select a license:"
+    licenses = Dir.entries(File.join(@source_root, 'licenses')).select { |name| name !~ /^\./ }
+    puts "We can generate the following licenses automatically for you:"
     licenses.sort.each_with_index do |license, index|
       puts "#{index}) #{licenses[index]}"
     end
-    puts "If the license you want to use is not listed, then add a template file to #{File.join(@source_root, 'licenses')} (or consider submitting a patch to the Engines plugin itself)"
+    print "Please select a license: "
     while choice = gets.chomp
       if (choice !~ /^[0-9]+$/)
-        print "Please enter a number: "
+        print "Hint - you want to be typing a number.\nPlease select a license: "
         next
       end
       break if choice.to_i >=0 && choice.to_i <= licenses.length
@@ -126,6 +126,12 @@ class EngineGenerator < Rails::Generator::NamedBase
   def initialize(runtime_args, runtime_options = {})
     super
     @engine_class_name = runtime_args.shift
+    
+    # ensure that they've given us a valid class name
+    if @engine_class_name =~ /^[a-z]/
+      raise "'#{@engine_class_name}' should be a valid Ruby constant, e.g. 'MyEngine'; aborting generation..." 
+    end
+    
     @engine_underscored_name = @engine_class_name.underscore
     @engine_start_name = @engine_underscored_name.sub(/_engine$/, '')
     @author = Author.new
@@ -136,13 +142,11 @@ class EngineGenerator < Rails::Generator::NamedBase
     record do |m|
       m.directory File.join('vendor', 'plugins')
       m.directory File.join('vendor', 'plugins', @engine_underscored_name)
-      #m.template 'README', File.join('vendor', 'plugins', @engine_underscored_name, 'README')
       m.complex_template 'README',
         File.join('vendor', 'plugins', @engine_underscored_name, 'README'),
         :sandbox => lambda {create_sandbox},
         :insert => @license.to_s
 
-      #m.template 'init_engine.rb', File.join('vendor', 'plugins', @engine_underscored_name, 'init_engine.rb') 
       m.complex_template 'init_engine.rb',
         File.join('vendor', 'plugins', @engine_underscored_name, 'init_engine.rb'),
         :sandbox => lambda {create_sandbox},
@@ -157,7 +161,6 @@ class EngineGenerator < Rails::Generator::NamedBase
       m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'db')
       m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'db', 'migrate')
       m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'lib')
-      #m.template File.join('lib', 'engine.rb'), File.join('vendor', 'plugins', @engine_underscored_name, 'lib', "#{@engine_underscored_name}.rb")
       m.complex_template File.join('lib', 'engine.rb'),
         File.join('vendor', 'plugins', @engine_underscored_name, 'lib', "#{@engine_underscored_name}.rb"),
         :sandbox => lambda {create_sandbox},
@@ -176,12 +179,11 @@ class EngineGenerator < Rails::Generator::NamedBase
       m.template File.join('test', 'test_helper.rb'), File.join('vendor', 'plugins', @engine_underscored_name, 'test', 'test_helper.rb')
       m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'test', 'fixtures')
       m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'test', 'functional')
-      m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'test', 'unit')
+      m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'test', 'unit')      
     end
   end
 
 protected
-  # Override with your own usage banner.
   def banner
     "Usage: #{$0} #{spec.name} MyEngine [general options]"
   end
