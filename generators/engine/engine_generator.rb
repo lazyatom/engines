@@ -96,12 +96,16 @@ class License
     # list all the licenses in the licenses directory
     licenses = Dir.entries(File.join(@source_root, 'licenses')).grep(/_license/)
     puts "Please select a license:"
-    licenses.each_index do |license_index|
+    licenses.sort.each_index do |license_index|
       puts "#{license_index}) #{licenses[license_index].sub(/_license$/, '').upcase}"
     end
     puts "If the license you want to use is not listed, then add a xxx_license file to the #{File.join(@source_root, 'licenes')}"
-    license_index = gets 
-    @license = licenses[license_index.chomp.to_i]
+    while license_index = gets.chomp
+      next unless license_index =~ /^[0-9]+$/
+      break if license_index.to_i >=0 && license_index.to_i <= licenses.length
+    end
+      
+    @license = licenses[license_index.to_i]
     puts "#{@license.sub(/_license$/, '').upcase} selected"
   end
 
