@@ -156,7 +156,7 @@ class EngineGenerator < Rails::Generator::NamedBase
       m.directory File.join('vendor', 'plugins', @engine_underscored_name, 'lib')
       #m.template File.join('lib', 'engine.rb'), File.join('vendor', 'plugins', @engine_underscored_name, 'lib', "#{@engine_underscored_name}.rb")
       m.complex_template File.join('lib', 'engine.rb'),
-        File.join('vendor', 'plugins', @engine_underscored_name, 'lib', 'init_engine.rb'),
+        File.join('vendor', 'plugins', @engine_underscored_name, 'lib', "#{@engine_underscored_name}.rb"),
         :sandbox => lambda {create_sandbox},
         :insert => @license.to_s,
         :comment_style => :rb
