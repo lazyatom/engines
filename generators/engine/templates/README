@@ -2,23 +2,25 @@
 
 ENGINE DEVELOPERS - HEED THIS!
 
-This is a sample README file to guide your users when they are installing 
-what is undoubtedly going to be the finest piece of code they ever got
-their hands on. Lucky them, but alas they are often foolish, and so this
-is where you can guide them with the metaphorical beating of twigs. Or just
-a numbered series of instructions.
+This is a sample README file to guide your users when they are installing what is undoubtedly going to be the finest piece of code they ever got their hands on. Lucky them, but alas they are often foolish, and so this is where you can guide them with the metaphorical beating of twigs. Or just a numbered series of instructions.
 
-ANYWAY - you will almost certainly need to tailor this to your specific 
-engine. Please check the engine development information on the Rails 
-Engines wiki for more information about what to do now:
+ANYWAY - you will almost certainly need to tailor this to your specific engine. For instance, your users will probably only need to include modules into the ApplicationController and ApplicationHelper if your engine defines methods to be usable by controllers and views external to your engine.
+
+If you engine does not rely on any database tables, you will probably not need migrations either.
+
+You are also under no obligation to use the 'config' method for setting options within your modules. Documentation which explains the purpose of the 'config' method is available as part of the Engines plugin itself.
+
+Please check the engine development information on the Rails Engines wiki for more information about what to do now:
   
   http://rails-engines.rubyforge.org/wiki/wiki.pl?DevelopingAnEngine
 
------------------------[ remember to cut me out ]--------------------------
+-----------------------[ remember to delete me! ]--------------------------
 
 = <%= engine_class_name %>
 
 <%= engine_class_name %> is a ...
+
+This software package is developed using the Engines plugin. To find out more about how to use engines in general, go to http://rails-engines.rubyforge.org for general documentation about the Engines mechanism.
 
 == Installation
 
