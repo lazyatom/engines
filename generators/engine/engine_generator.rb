@@ -128,9 +128,7 @@ class EngineGenerator < Rails::Generator::NamedBase
     @engine_class_name = runtime_args.shift
     
     # ensure that they've given us a valid class name
-    if @engine_class_name =~ /^[a-z]/
-      raise "'#{@engine_class_name}' should be a valid Ruby constant, e.g. 'MyEngine'; aborting generation..." 
-    end
+    raise "'#{@engine_class_name}' should be a valid Ruby constant, e.g. 'MyEngine'; aborting generation..." unless @engine_class_name =~ /^[A-Z]/
     
     @engine_underscored_name = @engine_class_name.underscore
     @engine_start_name = @engine_underscored_name.sub(/_engine$/, '')
