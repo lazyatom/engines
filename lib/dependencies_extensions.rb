@@ -30,8 +30,17 @@ module ::Dependencies
     # rather than a library or anything else.
     ['controller', 'helper'].each do |type| 
       if file_name.include?('_' + type)
+        
+        # the file path might contain module information. Because of this we
+        # strip the file path if necessary so that it can be matched against RAILS_ROOT
+        # or the engine.root.
+        processed_file_name = file_name
+        if processed_file_name.include?(RAILS_ROOT)
+          processed_file_name.gsub!(RAILS_ROOT+'/', '')
+        end
+
         Engines::ActiveEngines.reverse.each do |engine|
-          engine_file_name = File.join(engine.root, 'app', "#{type}s",  File.basename(file_name))
+          engine_file_name = File.join(engine.root, processed_file_name)
           engine_file_name += '.rb' unless engine_file_name[-3..-1] == '.rb'
           if File.exist? engine_file_name
             load? ? load(engine_file_name) : require(engine_file_name)
