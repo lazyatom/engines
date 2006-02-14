@@ -1,5 +1,7 @@
 *SVN*
 
+- moved extensions into lib/engines/ directory to enable use of
+  Engines module in extension code.
 - Added conditional require_or_load method which attempts to detect 
   the current Rails version. To use the Edge Rails version of the loading 
   mechanism, add the line:

@@ -32,12 +32,13 @@ module ::Dependencies
   
   def require_or_load(file_name)
 
-    if Engines.config(:edge)
+    if Rails::VERSION::STRING == "1.0.0" && # if we're using Rails 1.0.0
+      !::Engines.config(:edge)                # and the user hasn't specifically asked for edge
+      # use the old dependency load method
+      rails_1_0_0_require_or_load(file_name)
+    else
       # otherwise, assume we're on trunk
       rails_trunk_require_or_load(file_name)
-    else
-      # if we're using Rails 1.0.0, use the old dependency load method
-      rails_1_0_0_require_or_load(file_name)
     end
   end
   
@@ -139,5 +140,20 @@ module ::Dependencies
         
       end
     end     
-  end  
+  end
+end
+
+
+# We only need to deal with LoadingModules in Rails 1.0.0
+if Rails::VERSION::STRING == "1.0.0" && !Engines.config(:edge)
+  module ::Dependencies
+    class RootLoadingModule < LoadingModule
+      # hack to allow adding to the load paths within the Rails Dependencies mechanism.
+      # this allows Engine classes to be unloaded and loaded along with standard
+      # Rails application classes.
+      def add_path(path)
+        @load_paths << (path.kind_of?(ConstantLoadPath) ? path : ConstantLoadPath.new(path))
+      end
+    end
+  end
 end
