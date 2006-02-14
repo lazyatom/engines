@@ -31,7 +31,18 @@ module ::Dependencies
   alias :rails_official_require_or_load :require_or_load
   
   def require_or_load(file_name)
-    Engines.log.debug("require_or_load: #{file_name}")
+
+    if Engines.config(:edge)
+      # otherwise, assume we're on trunk
+      rails_trunk_require_or_load(file_name)
+    else
+      # if we're using Rails 1.0.0, use the old dependency load method
+      rails_1_0_0_require_or_load(file_name)
+    end
+  end
+  
+  def rails_trunk_require_or_load(file_name)
+    Engines.log.debug("EDGE require_or_load: #{file_name}")
     file_name = $1 if file_name =~ /^(.*)\.rb$/
     
     # try and load the engine code first
@@ -79,10 +90,10 @@ module ::Dependencies
   end
   
   
-  def new_require_or_load(file_name)
+  def rails_1_0_0_require_or_load(file_name)
     file_name = $1 if file_name =~ /^(.*)\.rb$/
 
-    Engines.log.debug "Engines' require_or_load for '#{file_name}'"
+    Engines.log.debug "1.0.0 require_or_load for '#{file_name}'"
 
     # if the file_name ends in "_controller" or "_controller.rb", strip all
     # path information out of it except for module context, and load it. Ditto

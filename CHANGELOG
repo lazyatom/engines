@@ -1,5 +1,11 @@
 *SVN*
 
+- Added conditional require_or_load method which attempts to detect 
+  the current Rails version. To use the Edge Rails version of the loading 
+  mechanism, add the line:
+    Engines.config :edge, true
+  to your environment.rb file.
+- Merged changes from /branches/edge and /branches/rb_1.0 into /trunk
 - engine_schema_info now respects the prefix/suffixes set for 
   ActiveRecord::Base (Ticket #67)
 - added ActiveRecord::Base.wrapped_table_name(name) method to assist
