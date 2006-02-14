@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../../../test/test_helper' # the default rails helper
+require File.expand_path(File.dirname(__FILE__) + '/../../../../test/test_helper') # the default rails helper
 
 # ensure that the Engines testing enhancements are loaded.
 require File.join(Engines.config(:root), "engines", "lib", "testing_extensions")

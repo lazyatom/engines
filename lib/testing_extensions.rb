@@ -125,8 +125,8 @@ class Fixtures < YAML::Omap
         
         # Cap primary key sequences to max(pk).
         if connection.respond_to?(:reset_pk_sequence!)
-          fixture_groups.each do |table_name|
-            connection.reset_pk_sequence!(table_name)
+          fixture_groups.each do |fg|
+            connection.reset_pk_sequence!(fg.table_name)
           end
         end
       end

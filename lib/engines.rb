@@ -21,18 +21,67 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'logger'
+
+
 require 'ruby_extensions'
 require 'dependencies_extensions'
 require 'action_view_extensions'
 require 'action_mailer_extensions'
 require 'testing_extensions'
 require 'migration_extensions'
+require 'active_record_extensions'
 
 
 # Holds the Rails Engine loading logic and default constants
-module ::Engines
+module Engines
+
+  class << self
+    # Return the version string for this plugin
+    def version
+      "#{Version::Major}.#{Version::Minor}.#{Version::Release}"
+    end
+  end
+
+  # The DummyLogger is a class which might pass through to a real Logger
+  # if one is assigned. However, it can gracefully swallow any logging calls
+  # if there is now Logger assigned.
+  class LoggerWrapper
+    def initialize(logger=nil)
+      set_logger(logger)
+    end
+    # Assign the 'real' Logger instance that this dummy instance wraps around.
+    def set_logger(logger)
+      @logger = logger
+    end
+    # log using the appropriate method if we have a logger
+    # if we dont' have a logger, ignore completely.
+    def method_missing(name, *args)
+      if @logger && @logger.respond_to?(name)
+        @logger.send(name, *args)
+      end
+    end
+  end
+
+  LOGGER = Engines::LoggerWrapper.new
+
+  class << self
+    # Create a new Logger instance for Engines, with the given outputter and level    
+    def create_logger(outputter=STDOUT, level=Logger::INFO)
+      LOGGER.set_logger(Logger.new(outputter, level))
+    end
+    # Sets the Logger instance that Engines will use to send logging information to
+    def set_logger(logger)
+      Engines::LOGGER.set_logger(logger)
+    end
+    # Retrieves the current Logger instance
+    def log
+      Engines::LOGGER
+    end
+    alias :logger :log
+  end
   
-  # An array of active engines (actually paths to active engines)
+  # An array of active engines. This should be accessed via the Engines.active method.
   ActiveEngines = []
   
   # The root directory for engines
@@ -60,8 +109,6 @@ module ::Engines
     #
     # Options can include:
     # * :copy_files => true | false
-    # * :engine_name => the name within the plugins directory this engine resides, if
-    #   different from the first parameter
     #
     # Note that if a list of engines is given, the options will apply to ALL engines.
     def start(*args)
@@ -70,7 +117,6 @@ module ::Engines
       
       if args.empty?
         start_all
-        return
       else
         args.each do |engine_name|
           start_engine(engine_name, options)
@@ -80,52 +126,40 @@ module ::Engines
 
     # Starts all available engines. Plugins are considered engines if they
     # include an init_engine.rb file, or they are named <something>_engine.
-    def start_all()
+    def start_all
       plugins = Dir[File.join(config(:root), "*")]
-      RAILS_DEFAULT_LOGGER.debug "considering plugins: #{plugins.inspect}"
+      Engines.log.debug "considering plugins: #{plugins.inspect}"
       plugins.each { |plugin|
         engine_name = File.basename(plugin)
-        if File.exist?(File.join(plugin, "init_engine.rb")) or
-           (engine_name =~ /_engine$/)
-          # start the engine...
-          start(engine_name)
+        if File.exist?(File.join(plugin, "init_engine.rb")) || (engine_name =~ /_engine$/)
+          start(engine_name) # start the engine...
         end
       }
     end
 
     def start_engine(engine_name, options={})
-
-      current_engine = Engine.new
-      current_engine.name = options[:engine_name] || engine_name
-      current_engine.root = get_engine_dir(engine_name)
       
-      #engine_name = options[:engine_name] || engine
-      #engine_dir = get_engine_dir(engine_name)
-
-      RAILS_DEFAULT_LOGGER.debug "Trying to start engine '#{current_engine.name}' from '#{File.expand_path(current_engine.root)}'"
-
-      # put this engine at the front of the ActiveEngines list
-      Engines::ActiveEngines.unshift current_engine #engine_dir
+      # Create a new Engine and put this engine at the front of the ActiveEngines list
+      current_engine = Engine.new(engine_name)
+      Engines.active.unshift current_engine
+      Engines.log.info "Starting engine '#{current_engine.name}' from '#{File.expand_path(current_engine.root)}'"
 
       # add the code directories of this engine to the load path
-      add_engine_to_load_path(current_engine) #engine_dir)
+      add_engine_to_load_path(current_engine)
 
       # load the engine's init.rb file
       startup_file = File.join(current_engine.root, "init_engine.rb")
       if File.exist?(startup_file)
         eval(IO.read(startup_file), binding, startup_file)
-        #require startup_file
+        # possibly use require_dependency? Hmm.
       else
-        RAILS_DEFAULT_LOGGER.warn "WARNING: No init_engines.rb file found for engine '#{current_engine.name}'..."
+        Engines.log.debug "No init_engines.rb file found for engine '#{current_engine.name}'..."
       end
 
       # add the controller & component path to the Dependency system
       engine_controllers = File.join(current_engine.root, 'app', 'controllers')
       engine_components = File.join(current_engine.root, 'components')
       
-      Controllers.add_path(engine_controllers) if File.exist?(engine_controllers)
-      Controllers.add_path(engine_components) if File.exist?(engine_components)
-
       # copy the files unless indicated otherwise
       if options[:copy_files] != false
         copy_engine_files(current_engine)
@@ -147,7 +181,7 @@ module ::Engines
       end
       
       # Add ALL paths under the engine root to the load path
-      app_dirs = Dir[engine.root + "/app/**/*"]
+      app_dirs = Dir[engine.root + "/app/**/*"] # maybe only models?
       component_dir = Dir[engine.root + "/components"]
       lib_dirs = Dir[engine.root + "/lib/**/*"]
       load_paths = (app_dirs + component_dir + lib_dirs).select { |d| 
@@ -167,8 +201,9 @@ module ::Engines
       # add these LAST on the load path.
       load_paths.reverse.each { |dir| 
         if File.directory?(dir)
-          RAILS_DEFAULT_LOGGER.debug "adding #{File.expand_path(dir)} to the load path"
-          $LOAD_PATH.push(File.expand_path(dir))  
+          Engines.log.debug "adding #{File.expand_path(dir)} to the load path"
+          #$LOAD_PATH.push(File.expand_path(dir))
+          $LOAD_PATH.push dir
         end
       }
       
@@ -182,117 +217,103 @@ module ::Engines
     # the corresponding public directory.
     def copy_engine_files(engine)
       
-     #engine_dir = get_engine_dir(engine)
-
-      # create the /public/frameworks directory if it doesn't exist
-      public_engine_dir = File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
+      begin
+        # create the /public/frameworks directory if it doesn't exist
+        public_engine_dir = File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
     
-      if !File.exists?(public_engine_dir)
-        # create the public/engines directory, with a warning message in it.
-        RAILS_DEFAULT_LOGGER.debug "Creating public engine files directory '#{public_engine_dir}'"
-        FileUtils.mkdir(public_engine_dir)
-        File.open(File.join(public_engine_dir, "README"), "w") do |f|
-          f.puts <<EOS
+        if !File.exists?(public_engine_dir)
+          # create the public/engines directory, with a warning message in it.
+          Engines.log.debug "Creating public engine files directory '#{public_engine_dir}'"
+          FileUtils.mkdir(public_engine_dir)
+          File.open(File.join(public_engine_dir, "README"), "w") do |f|
+            f.puts <<EOS
 Files in this directory are automatically generated from your Rails Engines.
 They are copied from the 'public' directories of each engine into this directory
 each time Rails starts (server, console... any time 'start_engine' is called).
 Any edits you make will NOT persist across the next server restart; instead you
-should edit the files within the <engine_name>/public directory itself.
+should edit the files within the <engine_name>/public/ directory itself.
 EOS
-        end
-      end
-    
-      source = File.join(engine.root, "public") #engine_dir, "public")
-      RAILS_DEFAULT_LOGGER.debug "Attempting to copy public engine files from '#{source}'"
-    
-      # if there is no public directory, just return after this file
-      return if !File.exist?(source)
-
-      source_files = Dir[source + "/**/*"]
-      source_dirs = source_files.select { |d| File.directory?(d) }
-      source_files -= source_dirs  
-      
-      RAILS_DEFAULT_LOGGER.debug "source dirs: #{source_dirs.inspect}"
-
-      # ensure that we are copying to <something>_engine, whatever the user gives us
-      full_engine_name = engine.name
-      full_engine_name += "_engine" if !(full_engine_name =~ /\_engine$/)
-
-      # Create the engine_files/<something>_engine dir if it doesn't exist
-      new_engine_dir = File.join(public_engine_dir, full_engine_name)
-      if !File.exists?(new_engine_dir)
-        # Create <something>_engine dir with a message
-        RAILS_DEFAULT_LOGGER.debug "Creating #{full_engine_name} public dir"
-        FileUtils.mkdir_p(new_engine_dir)
-      end
-
-      # create all the directories, transforming the old path into the new path
-      source_dirs.uniq.each { |dir|
-        begin        
-
-          # strip out the base path and add the result to the public path
-          relative_dir = dir.gsub(File.join(engine.root, "public"), full_engine_name)
-          target_dir = File.join(public_engine_dir, relative_dir)
-          unless File.exist?(target_dir)
-            RAILS_DEFAULT_LOGGER.debug "creating directory '#{target_dir}'"
-            FileUtils.mkdir_p(target_dir)
           end
-        rescue Exception => e
-          raise "Could not create directory #{target_dir}: \n" + e
         end
-      }
+    
+        source = File.join(engine.root, "public")
+        Engines.log.debug "Attempting to copy public engine files from '#{source}'"
+    
+        # if there is no public directory, just return after this file
+        return if !File.exist?(source)
 
+        source_files = Dir[source + "/**/*"]
+        source_dirs = source_files.select { |d| File.directory?(d) }
+        source_files -= source_dirs  
+      
+        Engines.log.debug "source dirs: #{source_dirs.inspect}"
 
-
-      # copy all the files, transforming the old path into the new path
-      source_files.uniq.each { |file|
-        begin
-          # change the path from the ENGINE ROOT to the public directory root for this engine
-          target = file.gsub(File.join(engine.root, "public"), 
-                             File.join(public_engine_dir, full_engine_name))
-          unless File.exist?(target) && FileUtils.identical?(file, target)
-            RAILS_DEFAULT_LOGGER.debug "copying file '#{file}' to '#{target}'"
-            FileUtils.cp(file, target)
-          end 
-        rescue Exception => e
-          raise "Could not copy #{file} to #{target}: \n" + e 
+        # Create the engine_files/<something>_engine dir if it doesn't exist
+        new_engine_dir = File.join(RAILS_ROOT, "public", engine.public_dir)
+        if !File.exists?(new_engine_dir)
+          # Create <something>_engine dir with a message
+          Engines.log.debug "Creating #{engine.public_dir} public dir"
+          FileUtils.mkdir_p(new_engine_dir)
         end
-      }
+
+        # create all the directories, transforming the old path into the new path
+        source_dirs.uniq.each { |dir|
+          begin        
+            # strip out the base path and add the result to the public path, i.e. replace 
+            #   ../script/../vendor/plugins/engine_name/public/javascript
+            # with
+            #   engine_name/javascript
+            #
+            relative_dir = dir.gsub(File.join(engine.root, "public"), engine.name)
+            target_dir = File.join(public_engine_dir, relative_dir)
+            unless File.exist?(target_dir)
+              Engines.log.debug "creating directory '#{target_dir}'"
+              FileUtils.mkdir_p(target_dir)
+            end
+          rescue Exception => e
+            raise "Could not create directory #{target_dir}: \n" + e
+          end
+        }
+
+        # copy all the files, transforming the old path into the new path
+        source_files.uniq.each { |file|
+          begin
+            # change the path from the ENGINE ROOT to the public directory root for this engine
+            target = file.gsub(File.join(engine.root, "public"), 
+                               File.join(public_engine_dir, engine.name))
+            unless File.exist?(target) && FileUtils.identical?(file, target)
+              Engines.log.debug "copying file '#{file}' to '#{target}'"
+              FileUtils.cp(file, target)
+            end 
+          rescue Exception => e
+            raise "Could not copy #{file} to #{target}: \n" + e 
+          end
+        }
+      rescue Exception => e
+        Engines.log.warn "WARNING: Couldn't create the engine public file structure for engine '#{engine.name}'; Error follows:"
+        Engines.log.warn e
+      end
     end
-
-  
-    #private
-      # Return the directory in which this engine is present
-      def get_engine_dir(engine_name)
-        engine_dir=File.join(Engines.config(:root), engine_name.to_s)
-
-        if !File.exist?(engine_dir)
-          # try adding "_engine" to the end of the path.
-          engine_dir += "_engine"
-          if !File.exist?(engine_dir)
-            raise "Cannot find the engine '#{engine_name}' in either /vendor/plugins/#{engine_name} or /vendor/plugins/#{engine_name}_engine..."
-          end
-        end      
-      
-        engine_dir
-      end
     
     # Returns the Engine object for the specified engine, e.g.:
     #    Engines.get(:login)  
     def get(name)
-      ActiveEngines.find { |e| e.name == name.to_s || e.name == "#{name}_engine" }
+      active.find { |e| e.name == name.to_s || e.name == "#{name}_engine" }
     end
     
     # Returns the Engine object for the current engine, i.e. the engine
     # in which the currently executing code lies.
-    def current()
-      #puts caller.inspect
-      #puts ">>> " + caller[0]
+    def current
       current_file = caller[0]
-      ActiveEngines.find do |engine|
+      active.find do |engine|
         File.expand_path(current_file).index(File.expand_path(engine.root)) == 0
       end
-    end    
+    end
+    
+    # Returns an array of active engines
+    def active
+      ActiveEngines
+    end
   end 
 end
 
@@ -305,16 +326,70 @@ class Engine
   # Returns the name of this engine
   attr_reader :name
   
-  def name=(val) 
-    @name = val.to_s 
-    @name += "_engine" if !(@name =~ /\_engine$/) # add _engine
+  # An attribute for holding the current version of this engine. There are three
+  # ways of providing an engine version. The simplest is using a string:
+  #
+  #   Engines.current.version = "1.0.7"
+  #
+  # Alternatively you can set it to a module which contains Major, Minor and Release
+  # constants:
+  #
+  #   module LoginEngine::Version
+  #     Major = 1; Minor = 0; Release = 6;
+  #   end
+  #   Engines.current.version = LoginEngine::Version
+  #
+  # Finally, you can set it to your own Proc, if you need something really fancy:
+  #
+  #   Engines.current.version = Proc.new { File.open('VERSION', 'r').readlines[0] }
+  # 
+  attr_writer :version
+  
+  # Engine developers can store any information they like in here.
+  attr_writer :info
+  
+  # Creates a new object holding information about an Engine.
+  def initialize(name)
+    engine_dir = File.join(Engines.config(:root), name.to_s)
+
+    if !File.exist?(engine_dir)
+      # try adding "_engine" to the end of the path.
+      engine_dir += "_engine"
+      if !File.exist?(engine_dir)
+        raise "Cannot find the engine '#{name}' in either /vendor/plugins/#{name} or /vendor/plugins/#{name}_engine..."
+      end
+    end      
+    
+    @root = engine_dir
+    @name = File.basename(engine_dir)
+  end
+    
+  # Returns the version string of this engine
+  def version
+    case @version
+    when Module
+      "#{@version::Major}.#{@version::Minor}.#{@version::Release}"
+    when Proc         # not sure about this
+      @version.call
+    when NilClass
+      'unknown'
+    else
+      @version
+    end
   end
   
-  def to_s() 
-    "Engine<#{@name}>"
+  # Returns a string describing this engine
+  def info
+    @info || '(none)'
+  end
+    
+  # Returns a string representation of this engine
+  def to_s
+    "Engine<'#{@name}' [#{version}]:#{root.gsub(RAILS_ROOT, '')}>"
   end
   
-  def public_dir()
+  # return the path to this Engine's public files (with a leading '/' for use in URIs)
+  def public_dir
     File.join("/", Engines.config(:public_dir), name)
   end
 end

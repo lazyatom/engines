@@ -37,7 +37,7 @@ module ::ActionView
 
         # Otherwise, check in the engines to see if the template can be found there.
         # Load this in order so that more recently started Engines will take priority.
-        Engines::ActiveEngines.each do |engine|
+        Engines.active.each do |engine|
           site_specific_path = File.join(engine.root, 'app', 'views',  template_path.to_s + '.' + extension.to_s)
           return site_specific_path if File.exist?(site_specific_path)
         end
@@ -91,20 +91,45 @@ module ::ActionView
       def engine_javascript(engine_name, *sources)
         javascript_include_tag(*convert_public_sources(engine_name, :javascript, sources))       
       end
+
+      # Returns a image tag based on the parameters passed to it
+      # Required option is option[:engine] in order to correctly idenfity the correct engine location
+      #
+      #   engine_image 'rails-engines.png', :engine => 'my_engine', :alt => 'My Engine' =>
+      #   <img src="/engine_files/my_engine/images/rails-engines.png" alt="My Engine />
+      #
+      # Any options supplied as a Hash as the last argument will be processed as in
+      # image_tag.
+      #
+      def engine_image(src, options = {})
+      	return if !src
+
+      	image_src = engine_image_src(src, options)
+
+      	options.delete(:engine)
+
+      	image_tag(image_src, options)
+      end
+
+      # Returns a path to the image stored within the engine_files
+      # Required option is option[:engine] in order to correctly idenfity the correct engine location
+      #
+      #   engine_image_src 'rails-engines.png', :engine => 'my_engine' =>
+      #   "/engine_files/my_engine/images/rails-engines.png"
+      #
+      def engine_image_src(src, options = {})
+        File.join(Engines.get(options[:engine].to_sym).public_dir, 'images', src)
+      end
       
       private
         # convert the engine public file sources into actual public paths
         # type:
         #   :stylesheet
         #   :javascript
-        # if engine_name does not end in engine, "_engine" is appended automatically. 
         def convert_public_sources(engine_name, type, sources)
           options = sources.last.is_a?(Hash) ? sources.pop.stringify_keys : { }
           new_sources = []
         
-          full_engine_name = engine_name
-          full_engine_name += "_engine" if !(engine_name =~ /\_engine$/)
-
           case type
             when :javascript
               type_dir = "javascripts"
@@ -114,13 +139,15 @@ module ::ActionView
               ext = "css"
           end
           
-          default = "/#{Engines.config(:public_dir)}/#{full_engine_name}/#{type_dir}/#{engine_name}"
+          engine = Engines.get(engine_name)
+          
+          default = "#{engine.public_dir}/#{type_dir}/#{engine_name}"
           if defined?(RAILS_ROOT) && File.exists?(File.join(RAILS_ROOT, "public", "#{default}.#{ext}"))
             new_sources << default
           end
         
           sources.each { |name| 
-            new_sources << "/#{Engines.config(:public_dir)}/#{full_engine_name}/#{type_dir}/#{name}"
+            new_sources << "#{engine.public_dir}/#{type_dir}/#{name}"
           }
 
           new_sources << options         

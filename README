@@ -1,6 +1,84 @@
-= Gentlemen, Start your Engines!
+= Welcome
 
-=== Quickstart
+This document gives an overview of how the Engines mechanism works within a Rails environment. In most cases the code below is just an example. For more information or documentation, please go to http://rails-engines.org.
+
+== Background
+
+Rails Engines are a way of dropping in whole chunks of functionality into your
+existing application without affecting *any* of your existing code. The could also be described as mini-applications, or vertical application slices - top-to-bottom units which provide full MVC coverage for a certain, specific application function.
+
+As an example, the Login Engine provides a full user login subsystem, including: 
+* controllers to manage user accounts; 
+* helpers for you to interact with account information from other 
+  parts of your application; 
+* the model objects and schemas to create the required tables; 
+* stylesheets and javascript files to enhance the views; 
+* and any other library files required.
+
+Once the Rails Core team decides on a suitable method for packaging plugins, Engines can be distributed using the same mechanisms. If you are developing engines yourself for use across multiple projects, linking them as svn externals allows seamless updating of bugfixes across multiple applications.
+
+
+= Using the Engines plugin itself
+
+There are a number of features of the Engines plugin itself which may be useful to know:
+
+=== Engines.log
+The Engines plugin comes with its own logger, which is invaluable when debugging. To use it,
+simply call
+
+  Engines.create_logger
+  
+Two optional arguments may be passed to this method:
+
+  Engines.create_logger(io)
+  
+Would set the outputter to the logger to the given io object. For example, this could be 
+STDERR or STDOUT (the default). The second argument is the logger level:
+
+  Engines.create_logger(STDOUT, Logger::INFO)
+  
+The logger can be accessed using either of the following:
+
+  Engines.log.[debug|info|whatever] "message"
+  Engines.logger.[debug|info|whatever] "message"
+  
+... essentially it's a Logger object. It's worth noting that if you *don't* create a logger, calls to Engines.log will just be swallowed without a sound, making it very very easy to completely silence Engine logging.
+
+
+=== Engines.config(:root)
+
+By default, the Engines plugin expects to be starting Engines from within RAILS_ROOT/vendor/plugins. However, if you'd like to store your engines in a different directory, add the following line to the *top* of environment.rb
+
+  module Engines
+    CONFIG[:root] = "/path/to/your/directory"
+  end
+  
+  
+=== Rake Tasks
+
+The engines plugin comes with a number of handy rake tasks:
+
+  rake engine_info     # displays version information about the engines subsystem
+  rake engine_migrate  # migrates engines' database schemas in a controlled way
+  rake enginedoc       # generates full documentation for all engines
+  
+There are more, but you'll have to discover them yourself...  
+
+== More information
+
+For more information about what you can do with the Engines plugin, you'll need to generate the documentation (rake plugindoc), or go to http://rails-engines.org. Good luck!  
+
+
+
+
+
+
+
+
+= Quickstart
+
+=== Gentlemen, Start your Engines!
+
 
 Here's an *example* of how you might go about using Rails Engines. Please bear in mind that actual Engines may differ from this, but these are the steps you will *typically* have to take. Refer to individual Engine documentation for specific installation instructions. Anyway, on with the show:
 
@@ -36,23 +114,9 @@ Here's an *example* of how you might go about using Rails Engines. Please bear i
 
 
 
-= Background
-Rails Engines are a way of dropping in whole chunks of functionality into your
-existing application without affecting *any* of your existing code. The could also be described as mini-applications, or vertical application slices - top-to-bottom units which provide full MVC coverage for a certain, specific application function.
-
-As an example, the Login Engine provides a full user login subsystem, including: 
-* controllers to manage user accounts; 
-* helpers for you to interact with account information from other 
-  parts of your application; 
-* the model objects and schemas to create the required tables; 
-* stylesheets and javascript files to enhance the views; 
-* and any other library files required.
-
-Once the Rails Core team decides on a suitable method for packaging plugins, Engines can be distributed using the same mechanisms. If you are developing engines yourself for use across multiple projects, linking them as svn externals allows seamless updating of bugfixes across multiple applications.
-
-
 
 = Building an Engine
+
 Here's a sample rails application with a detailed listing of an example engines as a concrete example:
 
   RAILS_ROOT
@@ -96,15 +160,21 @@ From within <tt>init_engine.rb</tt> you should load any libraries from your <tt>
 Calling either Engines.start (with no arguments) or Engines.start_all will load all engines available. Please note that your plugin can only be detected as an engine by the presence of an 'init_engine.rb' file, or if the engine is in a directory named <something>_engine. If neither of these conditions hold, then your engine will not be loaded by Engines.start() or Engines.start_all().
 
 
+
+
+
+
+
 = Configuring Engines
+
 Often your engine will require a number of configuration parameters set, some of which should be alterable by the user to reflect their particular needs. For example, a Login System might need a unique Salt value set to encrypt user passwords. This value should be unique to each application.
 
-Engines provides a simple mechanism to handle this, and it's already been hinted at above. Within any module, a new method is now available: <tt>config</tt>. This method creates a special <tt>CONFIG</tt> Hash object within the Module it is called, and can be used to store your parameters. For a user to set these parameters, they should reopen the module (before the corresponding Engine.start call), as follows:
+Engines provides a simple mechanism to handle this, and it's already been hinted at above. Within any module, a new method is now available: <tt>config</tt>. This method creates a special <tt>CONFIG</tt> Hash object within the Module it is called, and can be used to store your parameters. For a user to set these parameters, they should reopen the module (before the corresponding Engines.start call), as follows:
 
   module MyModule
     config :some_option, "really_important_value"
   end
-  Engine.start :my_engine
+  Engines.start :my_engine
 
 Because this config value has been set before the Engine is started, subsequent attempts to set this config value will be ignored and the user-specified value used instead. Of course, there are situations where you *really* want to set the config value, even if it already exists. In such cases the config call can be changed to:
 
@@ -128,6 +198,13 @@ You can override controller behaviour by replacing individual controller methods
 
 === Model/Lib Tweaks
 Alas, tweaking model objects isn't quite so easy (yet). If you need to change the behaviour of model objects, you'll need to copy the model file from the engine into <tt>/app/models</tt> and edit the methods yourself. Library code can be overridden in a similar way.
+
+
+
+
+
+
+
 
 
 = Public Files
@@ -159,6 +236,11 @@ The <tt>engine_javascript</tt> command works in exactly the same way as above.
 
 
 
+
+
+
+
+
 = Databases and Engines
 
 Engine schema information can be handled using similar mechanisms to your normal application schemas.
@@ -186,23 +268,28 @@ which is hopefully true, this can be quite useful.
 
 To migrate all engines to the latest version:
 
- rake engines_migrate
+ rake engine_migrate
 
 To migrate a single engine, for example the login engine:
 
- rake engines_migrate ENGINE=login  (or login_engine)
+ rake engine_migrate ENGINE=login  (or login_engine)
 
 To migrate a single engine to a specific revision:
 
- rake engines_migrate ENGINE=login VERSION=4
+ rake engine_migrate ENGINE=login VERSION=4
 
 This:
 
- rake engines_migrate VERSION=1
+ rake engine_migrate VERSION=1
 
 ... will not work, because we felt it was too dangerous to allow ALL
 engines to be migrated to a specific version, since such versions
 might be incompatible.
+
+
+
+
+
 
 
 = Testing Engines

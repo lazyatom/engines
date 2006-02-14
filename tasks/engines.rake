@@ -1,6 +1,24 @@
+desc "Display version information about active engines"
+task :engine_info => :environment do
+  if ENV["ENGINE"]
+    # display information about that particular engine(s)?
+    e = Engines.get(ENV["ENGINE"])
+    header = "Details for engine '#{e.name}':"
+    puts header
+    puts "-" * header.length
+    puts "Version: #{e.version}"
+    puts "Details: #{e.info}"
+  else
+    puts "Engines plugin: #{Engines.version}"
+    Engines.active.each do |e|
+      puts "#{e.name}: #{e.version}"
+    end
+  end
+end
+
 desc "Migrate one or all engines, based on the migrations in that engines db/migrate dir"
 task :engine_migrate => :environment do
-  engines_to_migrate = Engines::ActiveEngines
+  engines_to_migrate = Engines.active
   fail = false
   if ENV["ENGINE"]
     engines_to_migrate = [Engines.get(ENV["ENGINE"])].compact
@@ -19,7 +37,7 @@ task :engine_migrate => :environment do
   if !fail
     engines_to_migrate.each do |engine| 
       Engines::EngineMigrator.current_engine = engine
-      migration_directory = File.join(RAILS_ROOT, engine.root, 'db', 'migrate')
+      migration_directory = File.join(engine.root, 'db', 'migrate')
       if File.exist?(migration_directory)
         puts "Migrating engine '#{engine.name}'"
         Engines::EngineMigrator.migrate(migration_directory, ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
@@ -32,9 +50,9 @@ task :engine_migrate => :environment do
   end
 end
 
+
 # this is just a rip-off from the plugin stuff in railties/lib/tasks/documentation.rake, 
 # because the default plugindoc stuff doesn't support subdirectories like app.
-
 AllEngines = FileList['vendor/plugins/*_engine'].map {|engine| File.basename(engine)}
 # Define doc tasks for each engine
 AllEngines.each do |engine|

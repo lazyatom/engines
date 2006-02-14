@@ -2,7 +2,7 @@ ENV["RAILS_ENV"] = "test"
 require File.expand_path(File.dirname(__FILE__) + '/../../../../config/environment')
 require 'test_help'
 
-class EnginesTest < Test::Unit::TestCase
+class RubyExtensionsTest < Test::Unit::TestCase
 
   def setup
     # create the module to be used for config testing
@@ -40,6 +40,9 @@ class EnginesTest < Test::Unit::TestCase
     TestModule.config :monkey, 456
     assert_equal(123, TestModule.config(:monkey))
     
+    TestModule.config :monkey => 456
+    assert_equal(123, TestModule.config(:monkey))    
+    
     # in this case, the resulting Hash only has {:baboon => "goodbye!"} - that's Ruby, users beware.
     TestModule.config :baboon => "hello", :baboon => "goodbye!"
     assert_equal("goodbye!", TestModule.config(:baboon))    
@@ -47,9 +50,17 @@ class EnginesTest < Test::Unit::TestCase
   
   def test_config_force_new_value
     TestModule.config :monkey, 123
+    TestModule.config :man, 321
     assert_equal(123, TestModule.config(:monkey))
+    assert_equal(321, TestModule.config(:man))
     TestModule.config :monkey, 456, :force
-    assert_equal(456, TestModule.config(:monkey))    
+    assert_equal(456, TestModule.config(:monkey))  
+    TestModule.config :monkey => 456, :man => 654, :force => true
+    assert_equal(456, TestModule.config(:monkey))
+    assert_equal(654, TestModule.config(:man))      
+    TestModule.config :monkey => 789, :man => 987, :force => false
+    assert_equal(456, TestModule.config(:monkey))
+    assert_equal(654, TestModule.config(:man))      
   end
   
   # this test is somewhat redundant, but it might be an idea to havbe it explictly anyway

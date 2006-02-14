@@ -24,10 +24,17 @@
 
 require 'engines'
 
+module ::Engines::Version
+  Major = 1 # change implies compatibility breaking with previous versions
+  Minor = 0 # change implies backwards-compatible change to API
+  Release = 6 # incremented with bug-fixes, updates, etc.
+end
+
 #--
 # Create the Engines directory if it isn't present
 #++
 if !File.exist?(Engines.config(:root))
-  RAILS_DEFAULT_LOGGER.debug "Creating engines directory in /vendor"
+  Engines.log.debug "Creating engines directory in /vendor"
   FileUtils.mkdir_p(Engines.config(:root))
 end
+

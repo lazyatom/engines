@@ -88,16 +88,25 @@ class ::Module
   #   MyModule.config :param_two  
   #     => 98765
   #
+  # Configuration values can also be given as a Hash:
+  #
+  #   MyModule.config :param1 => 'value1', :param2 => 'value2'
+  #
+  # Setting of these values can also be forced:
+  #
+  #   MyModule.config :param1 => 'value3', :param2 => 'value4', :force => true
+  #
+  # A value of anything other than false or nil given for the :force key will
+  # result in the new values *always* being set.
   def config(*args)
     
     raise "config expects at least one argument" if args.empty?
     
     # extract the arguments
     if args[0].is_a?(Hash)
-      # we can't override when using hash'd arguments since
-      # if > 1 hash keys are given, it's impossible to tell which
-      # one is the name of the option, and which is the override flag.
-      args[0].each { |key, value| _handle_config(key, value)}
+      override = args[0][:force]
+      args[0].delete(:force)
+      args[0].each { |key, value| _handle_config(key, value, override)}
     else
       _handle_config(*args)
     end

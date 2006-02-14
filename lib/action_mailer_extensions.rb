@@ -109,7 +109,7 @@ module ActionMailer
       # Return all ActionView template paths from the app and all Engines
       def template_paths
         paths = [template_path]
-        Engines::ActiveEngines.each { |engine|
+        Engines.active.each { |engine|
           # add a path for every engine if one exists.
           engine_template_path = File.join(engine.root, "app", "views", mailer_name)
           paths << engine_template_path if File.exists?(engine_template_path)
@@ -152,7 +152,9 @@ module ActionMailer
       # template root
       def initialize_template_class(assigns, method_name)
         engine_template = find_template_root_for(method_name)
-        ActionView::Base.new(engine_template, assigns, self)
+        #ActionView::Base.new(engine_template, assigns, self)
+        action_view_class = Class.new(ActionView::Base).send(:include, master_helper_module)
+        action_view_class.new(engine_template, assigns, self)        
       end
 
 
