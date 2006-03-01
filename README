@@ -27,19 +27,21 @@ If you are using Edge Rails (an SVN copy of Rails, rather than an 'official' rel
 
 Firstly, you are using an unstable version of Rails, so it is possible that things will break. We work hard to keep the Engines plugin up to speed with the changes in Rails at the bleeding edge, but sometimes significant parts of Rails change it WILL cause problems. This is the price of using the bleeding edge. Since edge is synonymous for unstable, the version of the Engines plugin which is compatible with Edge Rails is kept separate from the official release. Please ensure that you have used SVN to get your engines plugin from
 
-  http://opensvn.csie.org/rails_engines/engines/trunk
+  http://svn.rails-engines.org/engines/trunk
   
 The normal 'script/plugin install engines' will NOT get you this version.
 
-Secondly, you NEED to tell the engines plugin if you expect it to perform with Edge behaviour. This is done by specifying the line before any other engines configuration:
+Secondly, you NEED to tell the engines plugin if you expect it to perform with Edge behaviour. This is done by adding the following lines at the *very top* of environment.rb (yes, the VERY TOP)
 
-  Engines.config :edge, true
+  module Engines
+    CONFIG = {:edge => true}
+  end
 
 This will set the plugin to work with Edge Rails, rather than expecting an official release.
 
 If you are having problems, please try and contribute a bug report if you can so we can improve the plugin and keep up to speed with Rails' bleeding edge. Your input is *absolutely crucial* to this. If you're not comfortable with tracking down bugs in Rails' and Engines' internal code, there is a test application available at
 
-  http://opensvn.csie.org/rails_engines/applications/engines_test
+  http://svn.rails-engines.org/applications/engines_test
   
 which contains an array of tests that might help you (and us) pinpoint where the issue is. Please download this application and consult the README for more information.
 

@@ -1,5 +1,7 @@
 *SVN*
 
+- Changed the version to "1.1.0 (svn)"
+- Added more information about using the plugin with Edge Rails to the README
 - moved extensions into lib/engines/ directory to enable use of
   Engines module in extension code.
 - Added conditional require_or_load method which attempts to detect 

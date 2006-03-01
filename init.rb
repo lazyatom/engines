@@ -26,8 +26,8 @@ require 'engines'
 
 module ::Engines::Version
   Major = 1 # change implies compatibility breaking with previous versions
-  Minor = 0 # change implies backwards-compatible change to API
-  Release = 6 # incremented with bug-fixes, updates, etc.
+  Minor = 1 # change implies backwards-compatible change to API
+  Release = '0 (svn)' # incremented with bug-fixes, updates, etc.
 end
 
 #--
