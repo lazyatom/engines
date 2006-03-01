@@ -35,14 +35,14 @@ module ::Dependencies
     if Rails::VERSION::STRING == "1.0.0" && # if we're using Rails 1.0.0
       !::Engines.config(:edge)                # and the user hasn't specifically asked for edge
       # use the old dependency load method
-      rails_1_0_0_require_or_load(file_name)
+      rails_1_0_require_or_load(file_name)
     else
-      # otherwise, assume we're on trunk
-      rails_trunk_require_or_load(file_name)
+      # otherwise, assume we're on trunk (1.1 at the moment)
+      rails_1_1_require_or_load(file_name)
     end
   end
   
-  def rails_trunk_require_or_load(file_name)
+  def rails_1_1_require_or_load(file_name)
     Engines.log.debug("EDGE require_or_load: #{file_name}")
     file_name = $1 if file_name =~ /^(.*)\.rb$/
     
@@ -56,30 +56,12 @@ module ::Dependencies
         # ... go through the active engines from last started to first
         Engines.active.each do |engine|
  
-          engine_file_name = File.join(engine.root, 'app', "#{type}s",  File.basename(file_name))
+          engine_file_name = File.expand_path(File.join(engine.root, 'app', "#{type}s", file_name))
           engine_file_name = $1 if engine_file_name =~ /^(.*)\.rb$/
-          Engines.log.debug("--> checking engine '#{engine.name}' for '#{engine_file_name}'")
+          Engines.log.debug("- checking engine '#{engine.name}' for '#{engine_file_name}'")
           if File.exist?("#{engine_file_name}.rb")
-            Engines.log.debug("--> loading from engine '#{engine.name}'")
+            Engines.log.debug("==> loading from engine '#{engine.name}'")
             rails_official_require_or_load(engine_file_name)
-#             begin
-#               loaded << engine_file_name
-#               if load?
-#                 if !warnings_on_first_load or history.include?(file_name)
-#                   load "#{engine_file_name}.rb"
-#                 else
-#                   enable_warnings { load "#{engine_file_name}.rb" }
-#                 end
-#               else
-#                 require engine_file_name
-#               end
-#             rescue
-#               # couldn't load the engine file
-#               loaded.delete engine_file_name
-#               raise
-#             end
-#             
-#             history << engine_file_name
           end
         end
       end 
@@ -91,7 +73,7 @@ module ::Dependencies
   end
   
   
-  def rails_1_0_0_require_or_load(file_name)
+  def rails_1_0_require_or_load(file_name)
     file_name = $1 if file_name =~ /^(.*)\.rb$/
 
     Engines.log.debug "1.0.0 require_or_load for '#{file_name}'"
