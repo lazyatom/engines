@@ -23,6 +23,7 @@
 
 
 require 'engines'
+require 'bundles'
 
 module ::Engines::Version
   Major = 1 # change implies compatibility breaking with previous versions
