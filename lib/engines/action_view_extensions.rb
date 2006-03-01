@@ -111,6 +111,11 @@ module ::ActionView
       	image_tag(image_src, options)
       end
 
+      # Alias for engine_image
+      def engine_image_tag(src, options = {})
+        engine_image(src, options)
+      end
+
       # Returns a path to the image stored within the engine_files
       # Required option is option[:engine] in order to correctly idenfity the correct engine location
       #
