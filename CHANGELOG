@@ -1,5 +1,7 @@
 *SVN*
 
+- Clarified MIT license (Ticket #98)
+- Updated Rake tasks to integrate smoothly with Rails 1.1 namespaces
 - Changed the version to "1.1.0 (svn)"
 - Added more information about using the plugin with Edge Rails to the README
 - moved extensions into lib/engines/ directory to enable use of
