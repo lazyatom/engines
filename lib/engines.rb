@@ -1,15 +1,8 @@
 require 'logger'
 
 require 'rails_version' # load this before doing ANYTHING freaky with the reloading.
-
 require 'engines/ruby_extensions'
-require 'engines/dependencies_extensions'
-require 'engines/action_view_extensions'
-require 'engines/action_mailer_extensions'
-require 'engines/testing_extensions'
-require 'engines/migration_extensions'
-require 'engines/active_record_extensions'
-
+# ... further files are required at the bottom of this file
 
 # Holds the Rails Engine loading logic and default constants
 module Engines
@@ -385,3 +378,12 @@ class Engine
     File.join("/", Engines.config(:public_dir), name)
   end
 end
+
+
+# These files must be required after the Engines module has been defined.
+require 'engines/dependencies_extensions'
+require 'engines/action_view_extensions'
+require 'engines/action_mailer_extensions'
+require 'engines/testing_extensions'
+require 'engines/migration_extensions'
+require 'engines/active_record_extensions'
