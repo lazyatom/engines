@@ -1,5 +1,10 @@
 *SVN*
 
+- Engine instance objects can be accessed via Engines[:name], an alias
+  for Engines.get(:name) (Ticket #99)
+- init_engine.rb is now processed as the final step in the Engine.start
+  process, so it can access files within the lib directory, which is now 
+  in the $LOAD_PATH at that point. (Ticket #99)
 - Clarified MIT license (Ticket #98)
 - Updated Rake tasks to integrate smoothly with Rails 1.1 namespaces
 - Changed the version to "1.1.0 (svn)"

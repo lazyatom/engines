@@ -59,8 +59,6 @@ module Engines
     alias :logger :log
   end
   
-  create_logger("#{RAILS_ROOT}/log/engines.log")
-  
   # An array of active engines. This should be accessed via the Engines.active method.
   ActiveEngines = []
   
@@ -131,15 +129,6 @@ module Engines
       # add the code directories of this engine to the load path
       add_engine_to_load_path(current_engine)
 
-      # load the engine's init.rb file
-      startup_file = File.join(current_engine.root, "init_engine.rb")
-      if File.exist?(startup_file)
-        eval(IO.read(startup_file), binding, startup_file)
-        # possibly use require_dependency? Hmm.
-      else
-        Engines.log.debug "No init_engines.rb file found for engine '#{current_engine.name}'..."
-      end
-
       # add the controller & component path to the Dependency system
       engine_controllers = File.join(current_engine.root, 'app', 'controllers')
       engine_components = File.join(current_engine.root, 'components')
@@ -151,10 +140,18 @@ module Engines
         Controllers.add_path(engine_components) if File.exist?(engine_components)
       end
         
-      
       # copy the files unless indicated otherwise
       if options[:copy_files] != false
         copy_engine_files(current_engine)
+      end
+
+      # load the engine's init.rb file
+      startup_file = File.join(current_engine.root, "init_engine.rb")
+      if File.exist?(startup_file)
+        eval(IO.read(startup_file), binding, startup_file)
+        # possibly use require_dependency? Hmm.
+      else
+        Engines.log.debug "No init_engines.rb file found for engine '#{current_engine.name}'..."
       end
     end
 
@@ -292,6 +289,7 @@ EOS
     def get(name)
       active.find { |e| e.name == name.to_s || e.name == "#{name}_engine" }
     end
+    alias_method :[], :get
     
     # Returns the Engine object for the current engine, i.e. the engine
     # in which the currently executing code lies.
