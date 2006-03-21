@@ -1,5 +1,6 @@
 *SVN*
 
+- Improved regexp matching for Rails 1.0 engines with peculiar paths
 - Engine instance objects can be accessed via Engines[:name], an alias
   for Engines.get(:name) (Ticket #99)
 - init_engine.rb is now processed as the final step in the Engine.start

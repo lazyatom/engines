@@ -6,7 +6,6 @@ module ::Dependencies
   alias :rails_pre_engines_require_or_load :require_or_load
   
   def require_or_load(file_name)
-    Engines.log.debug("engines: require_or_load: #{file_name}")
     if Rails::VERSION::STRING == "1.0.0" && # if we're using Rails 1.0.0
       !::Engines.config(:edge)                # and the user hasn't specifically asked for edge
       # use the old dependency load method
@@ -83,7 +82,7 @@ module ::Dependencies
   # running under a path like that.
   def require_engine_files(file_name, type='')
     Engines.log.debug "requiring #{type} file '#{file_name}'"
-    processed_file_name = file_name.gsub(/[\w\/\.]*app\/#{type}s\//, '')    
+    processed_file_name = file_name.gsub(/[\w\W\/\.]*app\/#{type}s\//, '')    
     Engines.log.debug "--> rewrote to '#{processed_file_name}'"
     Engines.active.reverse.each do |engine|
       engine_file_name = File.join(engine.root, 'app', "#{type}s", processed_file_name)
@@ -92,10 +91,7 @@ module ::Dependencies
       if File.exist?(engine_file_name) || 
         (engine_file_name[-3..-1] != '.rb' && File.exist?(engine_file_name + '.rb'))
         Engines.log.debug "--> found, loading from engine '#{engine.name}'"
-        #load? ? load(engine_file_name) : require(engine_file_name)
-        
-        rails_official_require_or_load(engine_file_name)
-        
+        rails_pre_engines_require_or_load(engine_file_name)
       end
     end     
   end
