@@ -3,10 +3,10 @@ module ::Dependencies
   # we're going to intercept the require_or_load method; lets
   # make an alias for the current method so we can use it as the basis
   # for loading from engines.
-  alias :rails_official_require_or_load :require_or_load
+  alias :rails_pre_engines_require_or_load :require_or_load
   
   def require_or_load(file_name)
-
+    Engines.log.debug("engines: require_or_load: #{file_name}")
     if Rails::VERSION::STRING == "1.0.0" && # if we're using Rails 1.0.0
       !::Engines.config(:edge)                # and the user hasn't specifically asked for edge
       # use the old dependency load method
@@ -18,9 +18,10 @@ module ::Dependencies
   end
   
   def rails_1_1_require_or_load(file_name)
-    Engines.log.debug("EDGE require_or_load: #{file_name}")
     file_name = $1 if file_name =~ /^(.*)\.rb$/
     
+    Engines.log.debug("EDGE require_or_load: #{file_name}")
+
     # try and load the engine code first
     # can't use model, as there's nothing in the name to indicate that the file is a 'model' file
     # rather than a library or anything else.
@@ -36,7 +37,7 @@ module ::Dependencies
           Engines.log.debug("- checking engine '#{engine.name}' for '#{engine_file_name}'")
           if File.exist?("#{engine_file_name}.rb")
             Engines.log.debug("==> loading from engine '#{engine.name}'")
-            rails_official_require_or_load(engine_file_name)
+            rails_pre_engines_require_or_load(engine_file_name)
           end
         end
       end 
@@ -44,7 +45,7 @@ module ::Dependencies
     
     # finally, load any application-specific controller classes using the 'proper'
     # rails load mechanism
-    rails_official_require_or_load(file_name)
+    rails_pre_engines_require_or_load(file_name)
   end
   
   
@@ -65,7 +66,7 @@ module ::Dependencies
     # finally, load any application-specific controller classes using the 'proper'
     # rails load mechanism
     Engines.log.debug("--> loading from application: '#{file_name}'")
-    rails_official_require_or_load(file_name)
+    rails_pre_engines_require_or_load(file_name)
     Engines.log.debug("--> Done loading.")
   end
   

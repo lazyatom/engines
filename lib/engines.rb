@@ -1,5 +1,7 @@
 require 'logger'
 
+require 'rails_version' # load this before doing ANYTHING freaky with the reloading.
+
 require 'engines/ruby_extensions'
 require 'engines/dependencies_extensions'
 require 'engines/action_view_extensions'
@@ -7,7 +9,6 @@ require 'engines/action_mailer_extensions'
 require 'engines/testing_extensions'
 require 'engines/migration_extensions'
 require 'engines/active_record_extensions'
-
 
 
 # Holds the Rails Engine loading logic and default constants
@@ -49,14 +50,16 @@ module Engines
     end
     # Sets the Logger instance that Engines will use to send logging information to
     def set_logger(logger)
-      Engines::LOGGER.set_logger(logger)
+      Engines::LOGGER.set_logger(logger) # TODO: no need for Engines:: part
     end
     # Retrieves the current Logger instance
     def log
-      Engines::LOGGER
+      Engines::LOGGER # TODO: no need for Engines:: part
     end
     alias :logger :log
   end
+  
+  create_logger("#{RAILS_ROOT}/log/engines.log")
   
   # An array of active engines. This should be accessed via the Engines.active method.
   ActiveEngines = []
