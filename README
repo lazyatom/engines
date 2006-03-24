@@ -377,8 +377,8 @@ Your engine should provide a test_helper.rb file in <engine>/test, the contents 
 
 An additional helpful task for loading fixture data is also provided (thanks to Joe Van Dyk):
 
-  rake load_plugin_fixtures
-  rake load_plugin_fixtures PLUGIN=login_engine
+  rake db:fixtures:engines:load
+  rake db:fixtures:engines:load PLUGIN=login_engine
   
 will load the engine fixture data into your development database.
 
