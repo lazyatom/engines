@@ -6,14 +6,19 @@ module ::Dependencies
   alias :rails_pre_engines_require_or_load :require_or_load
   
   def require_or_load(file_name)
-    if Rails::VERSION::STRING == "1.0.0" && # if we're using Rails 1.0.0
-      !::Engines.config(:edge)                # and the user hasn't specifically asked for edge
-      # use the old dependency load method
-      rails_1_0_require_or_load(file_name)
-    else
+    if Engines.config(:edge)
+      rails_edge_require_or_load(file_name)
+    elsif Rails::VERSION::STRING =~ /^1.1/
       # otherwise, assume we're on trunk (1.1 at the moment)
       rails_1_1_require_or_load(file_name)
+    elsif Rails::VERSION::STRING =~ /^1.0/
+      # use the old dependency load method
+      rails_1_0_require_or_load(file_name)
     end
+  end
+  
+  def rails_edge_require_or_load(file_name)
+    rails_1_1_require_or_load(file_name)
   end
   
   def rails_1_1_require_or_load(file_name)
@@ -99,7 +104,7 @@ end
 
 
 # We only need to deal with LoadingModules in Rails 1.0.0
-if Rails::VERSION::STRING == "1.0.0" && !Engines.config(:edge)
+if Rails::VERSION::STRING =~ /^1.0/
   module ::Dependencies
     class RootLoadingModule < LoadingModule
       # hack to allow adding to the load paths within the Rails Dependencies mechanism.

@@ -35,7 +35,7 @@ require 'bundles'
 module ::Engines::Version
   Major = 1 # change implies compatibility breaking with previous versions
   Minor = 1 # change implies backwards-compatible change to API
-  Release = '0 (svn)' # incremented with bug-fixes, updates, etc.
+  Release = 0 # incremented with bug-fixes, updates, etc.
 end
 
 #--
