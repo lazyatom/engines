@@ -128,7 +128,7 @@ module Engines
 
 
       # This mechanism is no longer required in Rails trunk
-      if Rails::VERSION::STRING == "1.0.0" && !Engines.config(:edge)
+      if Rails::VERSION::STRING =~ /^1.0/ && !Engines.config(:edge)
         Controllers.add_path(engine_controllers) if File.exist?(engine_controllers)
         Controllers.add_path(engine_components) if File.exist?(engine_components)
       end

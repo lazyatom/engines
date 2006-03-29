@@ -24,7 +24,7 @@ module ::Dependencies
   def rails_1_1_require_or_load(file_name)
     file_name = $1 if file_name =~ /^(.*)\.rb$/
     
-    Engines.log.debug("EDGE require_or_load: #{file_name}")
+    Engines.log.debug("Engines 1.1 require_or_load: #{file_name}")
 
     # try and load the engine code first
     # can't use model, as there's nothing in the name to indicate that the file is a 'model' file
@@ -56,7 +56,7 @@ module ::Dependencies
   def rails_1_0_require_or_load(file_name)
     file_name = $1 if file_name =~ /^(.*)\.rb$/
 
-    Engines.log.debug "1.0.0 require_or_load for '#{file_name}'"
+    Engines.log.debug "Engines 1.0.0 require_or_load '#{file_name}'"
 
     # if the file_name ends in "_controller" or "_controller.rb", strip all
     # path information out of it except for module context, and load it. Ditto
@@ -104,7 +104,7 @@ end
 
 
 # We only need to deal with LoadingModules in Rails 1.0.0
-if Rails::VERSION::STRING =~ /^1.0/
+if Rails::VERSION::STRING =~ /^1.0/ && !Engines.config(:edge)
   module ::Dependencies
     class RootLoadingModule < LoadingModule
       # hack to allow adding to the load paths within the Rails Dependencies mechanism.
