@@ -66,7 +66,7 @@ namespace :db do
       if engines_to_migrate.empty?
         puts "Couldn't find an engine called '#{ENV["ENGINE"]}'"
       else
-        if ENV["VERSION"]
+        if ENV["VERSION"] && !ENV["ENGINE"]
           # ignore the VERSION, since it makes no sense in this context; we wouldn't
           # want to revert ALL engines to the same version because of a misttype
           puts "Ignoring the given version (#{ENV["VERSION"]})."

@@ -1,5 +1,11 @@
 *SVN*
 
+- Fixed migration rake task failing when given a specific version (Ticket #115)
+
+
+-----
+1.1.0
+
 - Improved regexp matching for Rails 1.0 engines with peculiar paths
 - Engine instance objects can be accessed via Engines[:name], an alias
   for Engines.get(:name) (Ticket #99)
@@ -22,6 +28,7 @@
   ActiveRecord::Base (Ticket #67)
 - added ActiveRecord::Base.wrapped_table_name(name) method to assist
   in determining the correct table name
+
 
 -----
 1.0.6
