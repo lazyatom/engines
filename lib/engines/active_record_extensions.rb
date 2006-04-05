@@ -14,3 +14,6 @@ module ::ActiveRecord
     end
   end
 end
+
+# Set ActiveRecord to ignore the engine_schema_info table by default
+::ActiveRecord::SchemaDumper.ignore_tables << 'engine_schema_info'

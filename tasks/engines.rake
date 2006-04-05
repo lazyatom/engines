@@ -82,7 +82,9 @@ namespace :db do
               puts "The db/migrate directory for engine '#{engine.name}' appears to be missing."
               puts "Should be: #{migration_directory}"
             end
-            Rake::Task['db:schema:dump'].invoke if ActiveRecord::Base.schema_format == :ruby 
+          end
+          if ActiveRecord::Base.schema_format == :ruby && !engines_to_migrate.empty?
+            Rake::Task[:db_schema_dump].invoke
           end
         end
       end
@@ -138,4 +140,22 @@ namespace :doc do
       end
     end
   end
+end
+
+namespace :test do
+  desc "Run the engine tests in vendor/plugins/**/test (or specify with ENGINE=name)"
+  # NOTE: we're using the Rails 1.0 non-namespaced task here, just to maintain
+  # compatibility with Rails 1.0
+  # TODO: make this work with Engines.config(:root)
+  Rake::TestTask.new(:engines => :prepare_test_database) do |t|
+    t.libs << "test"
+
+    if ENV['ENGINE']
+      t.pattern = "vendor/plugins/#{ENV['ENGINE']}/test/**/*_test.rb"
+    else
+      t.pattern = 'vendor/plugins/**/test/**/*_test.rb'
+    end
+
+    t.verbose = true
+  end  
 end

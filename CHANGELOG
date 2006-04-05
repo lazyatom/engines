@@ -1,6 +1,9 @@
 *SVN*
 
 - Fixed migration rake task failing when given a specific version (Ticket #115)
+- Added new rake task "test:engines" which will test engines (and other plugins)
+  but ensure that the test database is cloned from development beforehand (Ticket #125)
+- Fixed issue where 'engine_schema_info' table was included in schema dumps (Ticket #87)
 
 
 -----
