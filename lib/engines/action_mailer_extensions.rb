@@ -29,17 +29,19 @@ module ActionMailer
           # this loop expects an array of paths to actual template files which match
           # the given action name
           templates.each do |path|
-            type = (File.basename(path).split(".")[1..-2] || []).join("/")
-            #RAILS_DEFAULT_LOGGER.debug "type: #{type}"
-            next if type.empty?
-            #RAILS_DEFAULT_LOGGER.debug "other bit: #{File.basename(path).split(".")[0..-2].join('.')}"
-            @parts << Part.new(:content_type => type,
+            # TODO: don't hardcode rhtml|rxml
+            basename = File.basename(path)
+            next unless md = /^([^\.]+)\.([^\.]+\.[^\+]+)\.(rhtml|rxml)$/.match(basename)
+            
+            template_name = basename
+            content_type = md.captures[1].gsub('.', '/')
+
+            @parts << Part.new(:content_type => content_type,            
               :disposition => "inline", :charset => charset,
-              :body => render_message(File.basename(path).split(".")[0..-2].join('.'), @body))
+              :body => render_message(template_name, @body))
           end
           unless @parts.empty?
             @content_type = "multipart/alternative"
-            @charset = nil
             @parts = sort_parts(@parts, @implicit_parts_order)
           end
         end
@@ -99,7 +101,7 @@ module ActionMailer
         templates = []
         seen_names = []
         template_paths.each { |path|
-          all_templates_for_path = Dir.glob(File.join(path, "#{action}.*"))
+          all_templates_for_path = Dir.glob(File.join(path, "#{action}*"))
           all_templates_for_path.each { |template|
             name = File.basename(template)
             if !seen_names.include?(name)

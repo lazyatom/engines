@@ -1,6 +1,12 @@
 require 'logger'
 
-require 'rails_version' # load this before doing ANYTHING freaky with the reloading.
+ # load this before doing ANYTHING freaky with the reloading.
+begin
+  require 'rails/version' # renamed as of Rails 1.1.1
+rescue LoadError
+  require 'rails_version' # Rails 1.0, 1.1.0
+end
+
 require 'engines/ruby_extensions'
 # ... further files are required at the bottom of this file
 
@@ -135,7 +141,7 @@ module Engines
         
       # copy the files unless indicated otherwise
       if options[:copy_files] != false
-        copy_engine_files(current_engine)
+        current_engine.mirror_engine_files
       end
 
       # load the engine's init.rb file
@@ -195,85 +201,26 @@ module Engines
       $LOAD_PATH.uniq!
     end
 
-    # Replicates the subdirectories under the engine's /public directory into
-    # the corresponding public directory.
-    def copy_engine_files(engine)
-      
-      begin
-        # create the /public/frameworks directory if it doesn't exist
-        public_engine_dir = File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
-    
-        if !File.exists?(public_engine_dir)
-          # create the public/engines directory, with a warning message in it.
-          Engines.log.debug "Creating public engine files directory '#{public_engine_dir}'"
-          FileUtils.mkdir(public_engine_dir)
-          File.open(File.join(public_engine_dir, "README"), "w") do |f|
-            f.puts <<EOS
+    # Returns the directory in which all engine public assets are mirrored.
+    def public_engine_dir
+      File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
+    end
+  
+    # create the /public/engine_files directory if it doesn't exist
+    def create_base_public_directory
+      if !File.exists?(public_engine_dir)
+        # create the public/engines directory, with a warning message in it.
+        Engines.log.debug "Creating public engine files directory '#{public_engine_dir}'"
+        FileUtils.mkdir(public_engine_dir)
+        File.open(File.join(public_engine_dir, "README"), "w") do |f|
+          f.puts <<EOS
 Files in this directory are automatically generated from your Rails Engines.
 They are copied from the 'public' directories of each engine into this directory
 each time Rails starts (server, console... any time 'start_engine' is called).
 Any edits you make will NOT persist across the next server restart; instead you
 should edit the files within the <engine_name>/public/ directory itself.
 EOS
-          end
         end
-    
-        source = File.join(engine.root, "public")
-        Engines.log.debug "Attempting to copy public engine files from '#{source}'"
-    
-        # if there is no public directory, just return after this file
-        return if !File.exist?(source)
-
-        source_files = Dir[source + "/**/*"]
-        source_dirs = source_files.select { |d| File.directory?(d) }
-        source_files -= source_dirs  
-      
-        Engines.log.debug "source dirs: #{source_dirs.inspect}"
-
-        # Create the engine_files/<something>_engine dir if it doesn't exist
-        new_engine_dir = File.join(RAILS_ROOT, "public", engine.public_dir)
-        if !File.exists?(new_engine_dir)
-          # Create <something>_engine dir with a message
-          Engines.log.debug "Creating #{engine.public_dir} public dir"
-          FileUtils.mkdir_p(new_engine_dir)
-        end
-
-        # create all the directories, transforming the old path into the new path
-        source_dirs.uniq.each { |dir|
-          begin        
-            # strip out the base path and add the result to the public path, i.e. replace 
-            #   ../script/../vendor/plugins/engine_name/public/javascript
-            # with
-            #   engine_name/javascript
-            #
-            relative_dir = dir.gsub(File.join(engine.root, "public"), engine.name)
-            target_dir = File.join(public_engine_dir, relative_dir)
-            unless File.exist?(target_dir)
-              Engines.log.debug "creating directory '#{target_dir}'"
-              FileUtils.mkdir_p(target_dir)
-            end
-          rescue Exception => e
-            raise "Could not create directory #{target_dir}: \n" + e
-          end
-        }
-
-        # copy all the files, transforming the old path into the new path
-        source_files.uniq.each { |file|
-          begin
-            # change the path from the ENGINE ROOT to the public directory root for this engine
-            target = file.gsub(File.join(engine.root, "public"), 
-                               File.join(public_engine_dir, engine.name))
-            unless File.exist?(target) && FileUtils.identical?(file, target)
-              Engines.log.debug "copying file '#{file}' to '#{target}'"
-              FileUtils.cp(file, target)
-            end 
-          rescue Exception => e
-            raise "Could not copy #{file} to #{target}: \n" + e 
-          end
-        }
-      rescue Exception => e
-        Engines.log.warn "WARNING: Couldn't create the engine public file structure for engine '#{engine.name}'; Error follows:"
-        Engines.log.warn e
       end
     end
     
@@ -377,6 +324,72 @@ class Engine
   def public_dir
     File.join("/", Engines.config(:public_dir), name)
   end
+  
+  # Replicates the subdirectories under the engine's /public directory into
+  # the corresponding public directory.
+  def mirror_engine_files
+    
+    begin
+      Engines.create_base_public_directory
+  
+      source = File.join(root, "public")
+      Engines.log.debug "Attempting to copy public engine files from '#{source}'"
+  
+      # if there is no public directory, just return after this file
+      return if !File.exist?(source)
+
+      source_files = Dir[source + "/**/*"]
+      source_dirs = source_files.select { |d| File.directory?(d) }
+      source_files -= source_dirs  
+    
+      Engines.log.debug "source dirs: #{source_dirs.inspect}"
+
+      # Create the engine_files/<something>_engine dir if it doesn't exist
+      new_engine_dir = File.join(RAILS_ROOT, "public", public_dir)
+      if !File.exists?(new_engine_dir)
+        # Create <something>_engine dir with a message
+        Engines.log.debug "Creating #{public_dir} public dir"
+        FileUtils.mkdir_p(new_engine_dir)
+      end
+
+      # create all the directories, transforming the old path into the new path
+      source_dirs.uniq.each { |dir|
+        begin        
+          # strip out the base path and add the result to the public path, i.e. replace 
+          #   ../script/../vendor/plugins/engine_name/public/javascript
+          # with
+          #   engine_name/javascript
+          #
+          relative_dir = dir.gsub(File.join(root, "public"), name)
+          target_dir = File.join(Engines.public_engine_dir, relative_dir)
+          unless File.exist?(target_dir)
+            Engines.log.debug "creating directory '#{target_dir}'"
+            FileUtils.mkdir_p(target_dir)
+          end
+        rescue Exception => e
+          raise "Could not create directory #{target_dir}: \n" + e
+        end
+      }
+
+      # copy all the files, transforming the old path into the new path
+      source_files.uniq.each { |file|
+        begin
+          # change the path from the ENGINE ROOT to the public directory root for this engine
+          target = file.gsub(File.join(root, "public"), 
+                             File.join(Engines.public_engine_dir, name))
+          unless File.exist?(target) && FileUtils.identical?(file, target)
+            Engines.log.debug "copying file '#{file}' to '#{target}'"
+            FileUtils.cp(file, target)
+          end 
+        rescue Exception => e
+          raise "Could not copy #{file} to #{target}: \n" + e 
+        end
+      }
+    rescue Exception => e
+      Engines.log.warn "WARNING: Couldn't create the engine public file structure for engine '#{name}'; Error follows:"
+      Engines.log.warn e
+    end
+  end  
 end
 
 
