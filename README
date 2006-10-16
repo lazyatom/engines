@@ -174,7 +174,7 @@ Here's a sample rails application with a detailed listing of an example engines 
                   |- init_engine.rb
                   |- app
                   |     |- controllers
-                  |     |- model
+                  |     |- models
                   |     |- helpers
                   |     |- views
                   |- db

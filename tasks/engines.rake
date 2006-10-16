@@ -33,7 +33,7 @@ namespace :engines do
       puts "Details: #{e.info}"
     else
       puts "Engines plugin: #{Engines.version}"
-      Engines.active.each do |e|
+      Engines.each do |e|
         puts "#{e.name}: #{e.version}"
       end
     end
@@ -147,15 +147,30 @@ namespace :test do
   # NOTE: we're using the Rails 1.0 non-namespaced task here, just to maintain
   # compatibility with Rails 1.0
   # TODO: make this work with Engines.config(:root)
-  Rake::TestTask.new(:engines => :prepare_test_database) do |t|
+  
+  namespace :engines do
+    Engines::RakeTasks.all_engines.each do |engine_name|
+      desc "Run the engine tests for '#{engine_name}'"
+      Rake::TestTask.new(engine_name => :prepare_test_database) do |t|
+        t.libs << 'test'
+        t.pattern = "vendor/plugins/#{engine_name}/test/**/*_test.rb"
+        t.verbose = true
+      end
+    end    
+  end
+  
+  Rake::TestTask.new(:engines => [:warn_about_multiple_engines_testing, :prepare_test_database]) do |t|
     t.libs << "test"
-
-    if ENV['ENGINE']
-      t.pattern = "vendor/plugins/#{ENV['ENGINE']}/test/**/*_test.rb"
-    else
-      t.pattern = 'vendor/plugins/**/test/**/*_test.rb'
-    end
-
+    engines = ENV['ENGINE'] || '**'
+    t.pattern = "vendor/plugins/#{engines}/test/**/*_test.rb"
     t.verbose = true
-  end  
+  end
+  
+  task :warn_about_multiple_engines_testing do
+    puts %{-~============== A Moste Polite Warninge ==================~-
+You may experience issues testing multiple engines at once. 
+Please test engines individual for the moment.
+-~===============( ... as you were ... )===================~-
+}
+  end
 end

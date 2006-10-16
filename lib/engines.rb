@@ -1,11 +1,44 @@
 require 'logger'
 
- # load this before doing ANYTHING freaky with the reloading.
-begin
-  require 'rails/version' # renamed as of Rails 1.1.1
-rescue LoadError
-  require 'rails_version' # Rails 1.0, 1.1.0
+# We need to know the version of Rails that we are running before we
+# can override any of the dependency stuff, since Rails' own behaviour
+# has changed over the various releases. We need to explicily make sure
+# that the Rails::VERSION constant is loaded, because such things could
+# not automatically be achieved prior to 1.1, and the location of the
+# file moved in 1.1.1!
+def load_rails_version
+  # At this point, we can't even rely on RAILS_ROOT existing, so we have to figure
+  # the path to RAILS_ROOT/vendor/rails manually
+  rails_base = File.expand_path(
+    File.join(File.dirname(__FILE__), # RAILS_ROOT/vendor/plugins/engines/lib
+    '..', # RAILS_ROOT/vendor/plugins/engines
+    '..', # RAILS_ROOT/vendor/plugins
+    '..', # RAILS_ROOT/vendor
+    'rails', 'railties', 'lib')) # RAILS_ROOT/vendor/rails/railties/lib
+  begin
+    load File.join(rails_base, 'rails', 'version.rb')
+    #puts 'loaded 1.1.1+ from vendor: ' + File.join(rails_base, 'rails', 'version.rb')
+  rescue MissingSourceFile # this means they DON'T have Rails 1.1.1 or later installed in vendor
+    begin
+      load File.join(rails_base, 'rails_version.rb')
+      #puts 'loaded 1.1.0- from vendor: ' + File.join(rails_base, 'rails_version.rb')
+    rescue MissingSourceFile # this means they DON'T have Rails 1.1.0 or previous installed in vendor
+      begin
+        # try and load version information for Rails 1.1.1 or later from the $LOAD_PATH
+        require 'rails/version'
+        #puts 'required 1.1.1+ from load path'
+      rescue LoadError
+        # try and load version information for Rails 1.1.0 or previous from the $LOAD_PATH
+        require 'rails_version'
+        #puts 'required 1.1.0- from load path'
+      end
+    end
+  end
 end
+
+# Actually perform the load
+load_rails_version
+#puts "Detected Rails version: #{Rails::VERSION::STRING}"
 
 require 'engines/ruby_extensions'
 # ... further files are required at the bottom of this file
@@ -18,6 +51,15 @@ module Engines
     def version
       "#{Version::Major}.#{Version::Minor}.#{Version::Release}"
     end
+    
+    # For holding the rails configuration object
+    attr_accessor :rails_config
+    
+    # A flag to stop searching for views in the application
+    attr_accessor :disable_app_views_loading
+    
+    # A flag to stop code being mixed in from the application
+    attr_accessor :disable_app_code_mixing
   end
 
   # The DummyLogger is a class which might pass through to a real Logger
@@ -108,7 +150,7 @@ module Engines
       Engines.log.debug "considering plugins: #{plugins.inspect}"
       plugins.each { |plugin|
         engine_name = File.basename(plugin)
-        if File.exist?(File.join(plugin, "init_engine.rb")) || # if the directory contains an init_engine.rb file
+        if File.exist?(File.join(plugin, "init_engine.rb")) || # if the directory contains init_engine.rb
           (engine_name =~ /_engine$/) || # or it engines in '_engines'
           (engine_name =~ /_bundle$/)    # or even ends in '_bundle'
           
@@ -116,6 +158,12 @@ module Engines
         
         end
       }
+    end
+
+    # Initialize the routing controller paths. 
+    def initialize_routing
+      # See lib/engines/routing_extensions.rb for more information.
+      ActionController::Routing.controller_paths = Engines.rails_config.controller_paths
     end
 
     def start_engine(engine_name, options={})
@@ -137,6 +185,9 @@ module Engines
       if Rails::VERSION::STRING =~ /^1.0/ && !Engines.config(:edge)
         Controllers.add_path(engine_controllers) if File.exist?(engine_controllers)
         Controllers.add_path(engine_components) if File.exist?(engine_components)
+      else      
+        ActionController::Routing.controller_paths << engine_controllers
+        ActionController::Routing.controller_paths << engine_components
       end
         
       # copy the files unless indicated otherwise
@@ -169,12 +220,13 @@ module Engines
       end
       
       # Add ALL paths under the engine root to the load path
-      app_dirs = Dir[engine.root + "/app/**/*"] # maybe only models?
-      component_dir = Dir[engine.root + "/components"]
-      lib_dirs = Dir[engine.root + "/lib/**/*"]
-      load_paths = (app_dirs + component_dir + lib_dirs).select { |d| 
-        File.directory?(d)
+      app_dirs = %w(controllers helpers models).collect { |d|
+        File.join(engine.root, 'app', d)
       }
+      other_dirs = %w(components lib).collect { |d| 
+        File.join(engine.root, d)
+      }
+      load_paths  = (app_dirs + other_dirs).select { |d| File.directory?(d) }
 
       # Remove other engines from the $LOAD_PATH by matching against the engine.root values
       # in ActiveEngines. Store the removed engines in the order they came off.
@@ -243,6 +295,16 @@ EOS
     # Returns an array of active engines
     def active
       ActiveEngines
+    end
+    
+    # Pass a block to perform an operation on each engine. You may pass an argument
+    # to determine the order:
+    # 
+    # * :load_order - in the order they were loaded (i.e. lower precidence engines first).
+    # * :precidence_order - highest precidence order (i.e. last loaded) first
+    def each(ordering=:precidence_order, &block)
+      engines = (ordering == :load_order) ? active.reverse : active
+      engines.each { |e| yield e }
     end
   end 
 end
@@ -395,8 +457,11 @@ end
 
 # These files must be required after the Engines module has been defined.
 require 'engines/dependencies_extensions'
+require 'engines/routing_extensions'
 require 'engines/action_view_extensions'
 require 'engines/action_mailer_extensions'
-require 'engines/testing_extensions'
 require 'engines/migration_extensions'
 require 'engines/active_record_extensions'
+
+# only load the testing extensions if we are in the test environment
+require 'engines/testing_extensions' if %w(test).include?(RAILS_ENV)

@@ -2,18 +2,22 @@ require 'fileutils'
 
 module ::ActionView
   class Base
+    
     private
       def full_template_path(template_path, extension)
 
-        # If the template exists in the normal application directory,
-        # return that path
-        default_template = "#{@base_path}/#{template_path}.#{extension}"
-        return default_template if File.exist?(default_template)
+        unless Engines.disable_app_views_loading
+          # If the template exists in the normal application directory,
+          # return that path
+          default_template = "#{@base_path}/#{template_path}.#{extension}"
+          return default_template if File.exist?(default_template)
+        end
 
         # Otherwise, check in the engines to see if the template can be found there.
         # Load this in order so that more recently started Engines will take priority.
-        Engines.active.each do |engine|
-          site_specific_path = File.join(engine.root, 'app', 'views',  template_path.to_s + '.' + extension.to_s)
+        Engines.each(:precidence_order) do |engine|
+          site_specific_path = File.join(engine.root, 'app', 'views',  
+                                         template_path.to_s + '.' + extension.to_s)
           return site_specific_path if File.exist?(site_specific_path)
         end
 

@@ -8,9 +8,11 @@ module ::Dependencies
   def require_or_load(file_name)
     if Engines.config(:edge)
       rails_edge_require_or_load(file_name)
+    
     elsif Rails::VERSION::STRING =~ /^1.1/
       # otherwise, assume we're on trunk (1.1 at the moment)
       rails_1_1_require_or_load(file_name)
+    
     elsif Rails::VERSION::STRING =~ /^1.0/
       # use the old dependency load method
       rails_1_0_require_or_load(file_name)
@@ -22,36 +24,41 @@ module ::Dependencies
   end
   
   def rails_1_1_require_or_load(file_name)
-    file_name = $1 if file_name =~ /^(.*)\.rb$/
-    
     Engines.log.debug("Engines 1.1 require_or_load: #{file_name}")
+
+    found = false
 
     # try and load the engine code first
     # can't use model, as there's nothing in the name to indicate that the file is a 'model' file
     # rather than a library or anything else.
     ['controller', 'helper'].each do |type| 
       # if we recognise this type
-      if file_name.include?('_' + type)
+      # (this regexp splits out the module/filename from any instances of app/#{type}, so that
+      #  modules are still respected.)
+      if file_name =~ /^(.*app\/#{type}s\/)?(.*_#{type})(\.rb)?$/
  
-        # ... go through the active engines from last started to first
-        Engines.active.each do |engine|
+        # ... go through the active engines from first started to last, so that
+        # code with a high precidence (started later) will override lower precidence
+        # implementations
+        Engines.each(:load_order) do |engine|
  
-          engine_file_name = File.expand_path(File.join(engine.root, 'app', "#{type}s", file_name))
-          engine_file_name = $1 if engine_file_name =~ /^(.*)\.rb$/
-          Engines.log.debug("- checking engine '#{engine.name}' for '#{engine_file_name}'")
+          engine_file_name = File.expand_path(File.join(engine.root, 'app', "#{type}s", $2))
+          #engine_file_name = $1 if engine_file_name =~ /^(.*)\.rb$/
+          Engines.log.debug("checking engine '#{engine.name}' for '#{engine_file_name}'")
           if File.exist?("#{engine_file_name}.rb")
             Engines.log.debug("==> loading from engine '#{engine.name}'")
             rails_pre_engines_require_or_load(engine_file_name)
+            found = true
           end
         end
       end 
     end
     
     # finally, load any application-specific controller classes using the 'proper'
-    # rails load mechanism
-    rails_pre_engines_require_or_load(file_name)
+    # rails load mechanism, EXCEPT when we're testing engines and could load this file
+    # from an engine
+    rails_pre_engines_require_or_load(file_name) unless Engines.disable_app_code_mixing && found
   end
-  
   
   def rails_1_0_require_or_load(file_name)
     file_name = $1 if file_name =~ /^(.*)\.rb$/
@@ -61,16 +68,17 @@ module ::Dependencies
     # if the file_name ends in "_controller" or "_controller.rb", strip all
     # path information out of it except for module context, and load it. Ditto
     # for helpers.
-    if file_name =~ /_controller(.rb)?$/
+    found = if file_name =~ /_controller(.rb)?$/
       require_engine_files(file_name, 'controller')
     elsif file_name =~ /_helper(.rb)?$/ # any other files we can do this with?
       require_engine_files(file_name, 'helper')
     end
     
     # finally, load any application-specific controller classes using the 'proper'
-    # rails load mechanism
+    # rails load mechanism, EXCEPT when we're testing engines and could load this file
+    # from an engine
     Engines.log.debug("--> loading from application: '#{file_name}'")
-    rails_pre_engines_require_or_load(file_name)
+    rails_pre_engines_require_or_load(file_name) unless Engines.disable_app_code_mixing && found
     Engines.log.debug("--> Done loading.")
   end
   
@@ -86,10 +94,11 @@ module ::Dependencies
   # then you might have trouble. Sorry, just please don't have your web application
   # running under a path like that.
   def require_engine_files(file_name, type='')
+    found = false
     Engines.log.debug "requiring #{type} file '#{file_name}'"
     processed_file_name = file_name.gsub(/[\w\W\/\.]*app\/#{type}s\//, '')    
     Engines.log.debug "--> rewrote to '#{processed_file_name}'"
-    Engines.active.reverse.each do |engine|
+    Engines.each(:load_order) do |engine|
       engine_file_name = File.join(engine.root, 'app', "#{type}s", processed_file_name)
       engine_file_name += '.rb' unless ! load? || engine_file_name[-3..-1] == '.rb'
       Engines.log.debug "--> checking '#{engine.name}' for #{engine_file_name}"
@@ -97,8 +106,10 @@ module ::Dependencies
         (engine_file_name[-3..-1] != '.rb' && File.exist?(engine_file_name + '.rb'))
         Engines.log.debug "--> found, loading from engine '#{engine.name}'"
         rails_pre_engines_require_or_load(engine_file_name)
+        found = true
       end
-    end     
+    end
+    found
   end
 end
 

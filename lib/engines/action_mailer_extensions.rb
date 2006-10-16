@@ -51,9 +51,11 @@ module ActionMailer
         # normal template exists (or if there were no implicit parts) we render
         # it.
         template_exists = @parts.empty?
-        #template_exists ||= Dir.glob("#{template_path}/#{@template}.*").any? { |i| i.split(".").length == 2 }
-        template_exists ||= templates.any? { |i| File.basename(i).split(".").length == 2 }
-        #RAILS_DEFAULT_LOGGER.debug "template_exists? #{template_exists}"
+        # template_exists ||= Dir.glob("#{template_path}/#{@template}.*").any? { |i| i.split(".").length == 2 }
+        template_exists ||= templates.any? do |i|
+          arr = File.basename(i).split(".")
+          (arr.length == 2) && (arr[0] == @template) 
+        end
         @body = render_message(@template, @body) if template_exists
 
         # Finally, if there are other message parts and a textual body exists,
@@ -86,7 +88,7 @@ module ActionMailer
       # Return all ActionView template paths from the app and all Engines
       def template_paths
         paths = [template_path]
-        Engines.active.each { |engine|
+        Engines.each { |engine|
           # add a path for every engine if one exists.
           engine_template_path = File.join(engine.root, "app", "views", mailer_name)
           paths << engine_template_path if File.exists?(engine_template_path)
@@ -129,7 +131,6 @@ module ActionMailer
       # template root
       def initialize_template_class(assigns, method_name)
         engine_template = find_template_root_for(method_name)
-        #ActionView::Base.new(engine_template, assigns, self)
         action_view_class = Class.new(ActionView::Base).send(:include, master_helper_module)
         action_view_class.new(engine_template, assigns, self)        
       end

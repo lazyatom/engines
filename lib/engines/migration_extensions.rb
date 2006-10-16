@@ -1,5 +1,3 @@
-#require 'active_record/connection_adapters/abstract/schema_statements'
-
 module ::ActiveRecord::ConnectionAdapters::SchemaStatements
   alias :old_initialize_schema_information :initialize_schema_information
   def initialize_schema_information
@@ -17,25 +15,8 @@ module ::ActiveRecord::ConnectionAdapters::SchemaStatements
   def engine_schema_info_table_name
     ActiveRecord::Base.wrapped_table_name "engine_schema_info"
   end
-  
-  def migrate_engine(name, version=nil)
-    engine = Engines.get(name)
-    raise "Cannot find engine #{name}" if engine.nil?
-    Engines::EngineMigrator.current_engine = engine
-    version = version.is_a?(Hash) ? version[:version] : version
-    migration_directory = File.join(engine.root, 'db', 'migrate')
-    if File.exist?(migration_directory)
-      puts "Migrating engine '#{engine.name}'"
-      Engines::EngineMigrator.migrate(migration_directory, version.nil? ? version : nil)
-    else
-      puts "The db/migrate directory for engine '#{engine.name}' appears to be missing."
-      puts "Should be: #{migration_directory}"
-    end
-  end
 end
 
-
-require 'breakpoint'
 module ::Engines
   class EngineMigrator < ActiveRecord::Migrator
 

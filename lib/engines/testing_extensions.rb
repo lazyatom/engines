@@ -83,8 +83,12 @@ class Fixtures < YAML::Omap
     if load_instances
       ActiveRecord::Base.silence do
         fixtures.each do |name, fixture|
-          if model = fixture.find
-            object.instance_variable_set "@#{name}", model
+          begin
+            if model = fixture.find
+              object.instance_variable_set "@#{name}", model
+            end
+          rescue FixtureClassNotFound
+            # Let's hope the developer has included it himself
           end
         end
       end
