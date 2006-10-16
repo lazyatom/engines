@@ -191,5 +191,8 @@ require 'engines/extensions/active_record'
 
 require 'engines/config'
 
+# For the moment, re-inject this functionality
+::Module.send(:include, Engines::Config)
+
 # only load the testing extensions if we are in the test environment
 require 'engines/extensions/testing' if %w(test).include?(RAILS_ENV)
