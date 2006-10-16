@@ -5,22 +5,38 @@ module ::Dependencies
   # for loading from engines.
   alias :rails_pre_engines_require_or_load :require_or_load
   
-  def require_or_load(file_name)
-    if Engines.config(:edge)
-      rails_edge_require_or_load(file_name)
+  # Now redefining require_or_load based on the version of Rails
+  # we are running against
+  def require_or_load(*args)
+    case Engines.detected_rails_version
+    when Engines::RailsVersions::Edge
+      rails_edge_require_or_load(*args)
     
-    elsif Rails::VERSION::STRING =~ /^1.1/
-      # otherwise, assume we're on trunk (1.1 at the moment)
+    when Engines::RailsVersions::Rails_1_2
+      rails_1_2_require_or_load(*args)
+    
+    when Engines::RailsVersions::Rails_1_1
+      file_name = args.first
       rails_1_1_require_or_load(file_name)
     
-    elsif Rails::VERSION::STRING =~ /^1.0/
-      # use the old dependency load method
+    when Engines::RailsVersions::Rails_1_0
+      file_name = args.first
       rails_1_0_require_or_load(file_name)
+    
+    else
+      # Unknown version of Rails. Warn the user and then default to
+      # normal Rails loading.
+      Engines.log.warn "Unknown Rails Version - you may find strange behaviour..."
+      rails_pre_engines_require_or_load(*args)
     end
   end
   
-  def rails_edge_require_or_load(file_name)
-    rails_1_1_require_or_load(file_name)
+  def rails_edge_require_or_load(file_name, const_path=nil)
+    rails_1_2_require_or_load(file_name, const_path)
+  end
+  
+  def rails_1_2_require_or_load(file_name, const_path=nil)
+    rails_1_1_require_or_load(file_name) # lets ignore const_path for now.
   end
   
   def rails_1_1_require_or_load(file_name)
@@ -79,7 +95,7 @@ module ::Dependencies
     # from an engine
     Engines.log.debug("--> loading from application: '#{file_name}'")
     rails_pre_engines_require_or_load(file_name) unless Engines.disable_app_code_mixing && found
-    Engines.log.debug("--> Done loading.")
+    Engines.log.debug("<-- Done loading.")
   end
   
   # Load the given file (which should be a path to be matched from the root of each
@@ -115,7 +131,7 @@ end
 
 
 # We only need to deal with LoadingModules in Rails 1.0.0
-if Rails::VERSION::STRING =~ /^1.0/ && !Engines.config(:edge)
+if Engines.on_rails_1_0?
   module ::Dependencies
     class RootLoadingModule < LoadingModule
       # hack to allow adding to the load paths within the Rails Dependencies mechanism.

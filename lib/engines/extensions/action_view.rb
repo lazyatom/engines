@@ -102,7 +102,7 @@ module ::ActionView
       #   "/engine_files/my_engine/images/rails-engines.png"
       #
       def engine_image_src(src, options = {})
-        File.join(Engines.get(options[:engine].to_sym).public_dir, 'images', src)
+        "#{Engines.get(options[:engine].to_sym).asset_base_uri}/images/#{src}"
       end
       
       private
@@ -125,13 +125,13 @@ module ::ActionView
           
           engine = Engines.get(engine_name)
           
-          default = "#{engine.public_dir}/#{type_dir}/#{engine_name}"
+          default = "#{engine.asset_base_uri}/#{type_dir}/#{engine_name}"
           if defined?(RAILS_ROOT) && File.exists?(File.join(RAILS_ROOT, "public", "#{default}.#{ext}"))
             new_sources << default
           end
         
           sources.each { |name| 
-            new_sources << "#{engine.public_dir}/#{type_dir}/#{name}"
+            new_sources << "#{engine.asset_base_uri}/#{type_dir}/#{name}"
           }
 
           new_sources << options         

@@ -27,16 +27,15 @@ class Engine
   attr_writer :version
   
   # Engine developers can store any information they like in here.
-  attr_writer :info
+  attr_accessor :info
   
   # Creates a new object holding information about an Engine.
   def initialize(name)
-
     @root = ''
     suffixes = ['', '_engine', '_bundle']
     while !File.exist?(@root) && !suffixes.empty?
       suffix = suffixes.shift
-      @root = File.join(Engines.config(:root), name.to_s + suffix)
+      @root = File.join(Engines.root, name.to_s + suffix)
     end
 
     if !File.exist?(@root)
@@ -45,6 +44,7 @@ class Engine
     end      
     
     @name = File.basename(@root)
+    @info = '(none)'
   end
     
   # Returns the version string of this engine
@@ -61,33 +61,66 @@ class Engine
     end
   end
   
-  # Returns a string describing this engine
-  def info
-    @info || '(none)'
+  def log
+    Engines.log
   end
   
-  def init(options={})
+  def start(options={})
     # copy the files unless indicated otherwise
     mirror_engine_files unless options[:copy_files] == false
 
+    inject_into_load_path
+    inject_into_routing
+    
+    run_startup_file
+  end
+  
+
+  # Adds all directories in the /app and /lib directories within the engine
+  # to the load path
+  def inject_into_load_path
+        
+    # Add ALL paths under the engine root to the load path
+    %w(app/controllers 
+       app/helpers 
+       app/models
+       components
+       lib).collect { |dir|
+          File.join(self.root, dir)
+        }.select { |dir| File.directory?(dir) }.each do |path|
+      insert_into_load_path(path)   
+    end
+  end
+  
+  def inject_into_routing
+    # add the controller & component path to the Dependency system
+    engine_controllers = File.join(self.root, 'app', 'controllers')
+    engine_components = File.join(self.root, 'components')
+
+    # This mechanism is no longer required in Rails trunk
+    if Engines.on_rails_1_0?
+      Controllers.add_path(engine_controllers) if File.exist?(engine_controllers)
+      Controllers.add_path(engine_components) if File.exist?(engine_components)
+    else
+      ActionController::Routing.controller_paths << engine_controllers
+      ActionController::Routing.controller_paths << engine_components
+    end
+  end
+
+  def run_startup_file
     # load the engine's init.rb file
     startup_file = File.join(self.root, "init_engine.rb")
     if File.exist?(startup_file)
       eval(IO.read(startup_file), binding, startup_file)
     else
-      Engines.log.debug "No init_engines.rb file found for engine '#{self.name}'..."
+      log.debug "No init_engines.rb file found for engine '#{self.name}'..."
     end    
   end
-  
+
   
   # Returns a string representation of this engine
   def to_s
     "Engine<'#{@name}' [#{version}]:#{root.gsub(RAILS_ROOT, '')}>"
-  end
-  
-  # return the path to this Engine's public files (with a leading '/' for use in URIs)
-  def public_dir
-    File.join("/", Engines.config(:public_dir), name)
   end
   
   # Replicates the subdirectories under the engine's /public directory into
@@ -97,24 +130,22 @@ class Engine
     begin
       Engines.initialize_base_public_directory
   
-      source = File.join(root, "public")
-      Engines.log.debug "Attempting to copy public engine files from '#{source}'"
+      log.debug "Attempting to copy public engine files from '#{source_public_dir}'"
   
       # if there is no public directory, just return after this file
-      return if !File.exist?(source)
+      return if !File.exist?(source_public_dir)
 
-      source_files = Dir[source + "/**/*"]
+      source_files = Dir[source_public_dir + "/**/*"]
       source_dirs = source_files.select { |d| File.directory?(d) }
       source_files -= source_dirs  
     
-      Engines.log.debug "source dirs: #{source_dirs.inspect}"
+      log.debug "source dirs: #{source_dirs.inspect}"
 
       # Create the engine_files/<something>_engine dir if it doesn't exist
-      new_engine_dir = File.join(RAILS_ROOT, "public", public_dir)
-      if !File.exists?(new_engine_dir)
+      if !File.exists?(self.destination_public_dir)
         # Create <something>_engine dir with a message
-        Engines.log.debug "Creating #{public_dir} public dir"
-        FileUtils.mkdir_p(new_engine_dir)
+        log.debug "Creating #{self.destination_public_dir} public dir"
+        FileUtils.mkdir_p(self.destination_public_dir)
       end
 
       # create all the directories, transforming the old path into the new path
@@ -126,9 +157,9 @@ class Engine
           #   engine_name/javascript
           #
           relative_dir = dir.gsub(File.join(root, "public"), name)
-          target_dir = File.join(Engines.public_engine_dir, relative_dir)
+          target_dir = File.join(Engines.public_dir, relative_dir)
           unless File.exist?(target_dir)
-            Engines.log.debug "creating directory '#{target_dir}'"
+            log.debug "Creating directory '#{target_dir}'"
             FileUtils.mkdir_p(target_dir)
           end
         rescue Exception => e
@@ -141,9 +172,9 @@ class Engine
         begin
           # change the path from the ENGINE ROOT to the public directory root for this engine
           target = file.gsub(File.join(root, "public"), 
-                             File.join(Engines.public_engine_dir, name))
+                             self.public_dir)
           unless File.exist?(target) && FileUtils.identical?(file, target)
-            Engines.log.debug "copying file '#{file}' to '#{target}'"
+            log.debug "copying file '#{file}' to '#{target}'"
             FileUtils.cp(file, target)
           end 
         rescue Exception => e
@@ -151,8 +182,33 @@ class Engine
         end
       }
     rescue Exception => e
-      Engines.log.warn "WARNING: Couldn't create the engine public file structure for engine '#{name}'; Error follows:"
-      Engines.log.warn e
+      log.warn "WARNING: Couldn't create the engine public file structure for engine '#{name}'; Error follows:"
+      log.warn e
     end
-  end  
+  end
+  
+  def asset_base_uri
+    "/#{File.basename(Engines.public_dir)}/#{name}"
+  end
+  
+  private 
+  
+    # return the path to this Engine's public files (with a leading '/' for use in URIs)
+    def destination_public_dir
+      File.join(Engines.public_dir, name)
+    end
+  
+    def source_public_dir
+      File.join(self.root, "public")
+    end
+ 
+    def insert_into_load_path(path)
+      load_path_index = $LOAD_PATH.index(Engines.rails_final_load_path)
+      $LOAD_PATH.insert(load_path_index + 1, path)
+
+      if Engines.on_rails_1_2? or Engines.on_edge?
+        dependency_load_path_index = Dependencies.load_paths.index(Engines.rails_final_dependency_load_path)
+        Dependencies.load_paths.insert(dependency_load_path_index + 1, path)
+      end
+    end 
 end

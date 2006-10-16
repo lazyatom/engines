@@ -38,5 +38,6 @@ module ::Engines::Version
   Release = 0 # incremented with bug-fixes, updates, etc.
 end
 
-# Initialize engines
-Engines.initialize_subsystem(config)
+# Keep a hold of the Rails Configuration object, which we can *only* access
+# when this file is evaluated.
+Engines.rails_config = config

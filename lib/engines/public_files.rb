@@ -1,17 +1,13 @@
 module Engines
   class << self
-    # Returns the directory in which all engine public assets are mirrored.
-    def public_engine_dir
-      File.expand_path(File.join(RAILS_ROOT, "public", Engines.config(:public_dir)))
-    end
-  
-    # create the /public/engine_files directory if it doesn't exist
+    # create the public engine asset directory if it doesn't exist
+    # (see Engines.public_dir for the specific location)
     def initialize_base_public_directory
-      if !File.exists?(public_engine_dir)
+      if !File.exists?(Engines.public_dir)
         # create the public/engines directory, with a warning message in it.
-        Engines.log.debug "Creating public engine files directory '#{public_engine_dir}'"
-        FileUtils.mkdir(public_engine_dir)
-        File.open(File.join(public_engine_dir, "README"), "w") do |f|
+        Engines.log.debug "Creating public engine files directory '#{Engines.public_dir}'"
+        FileUtils.mkdir(Engines.public_dir)
+        File.open(File.join(Engines.public_dir, "README"), "w") do |f|
           f.puts <<EOS
 Files in this directory are automatically generated from your Rails Engines.
 They are copied from the 'public' directories of each engine into this directory

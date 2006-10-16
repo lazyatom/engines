@@ -31,10 +31,10 @@ Firstly, you are using an unstable version of Rails, so it is possible that thin
   
 The normal 'script/plugin install engines' will NOT get you this version.
 
-Secondly, you NEED to tell the engines plugin if you expect it to perform with Edge behaviour. This is done by adding the following lines at the *very top* of environment.rb (yes, the VERY TOP)
+Secondly, you NEED to tell the engines plugin if you expect it to perform with Edge behaviour. This is done by adding the following lines at the *very top* of environment.rb (yes, the VERY TOP):
 
   module Engines
-    CONFIG = {:edge => true}
+    EdgeRails = true
   end
 
 This will set the plugin to work with Edge Rails, rather than expecting an official release.
@@ -82,11 +82,11 @@ The logger can be accessed using either of the following:
 ... essentially it's a Logger object. It's worth noting that if you *don't* create a logger, calls to Engines.log will just be swallowed without a sound, making it very very easy to completely silence Engine logging.
 
 
-=== Engines.config(:root)
+=== Engines.root
 
 By default, the Engines plugin expects to be starting Engines from within RAILS_ROOT/vendor/plugins. However, if you'd like to store your engines in a different directory, add the following line *before* any call to Engines.start
 
-  Engines.config(:root, "/path/to/your/directory", :force)
+  Engines.root = "/path/to/your/directory"
   
   
 === Rake Tasks
@@ -211,7 +211,7 @@ Calling either Engines.start (with no arguments) or Engines.start_all will load 
 
 Often your engine will require a number of configuration parameters set, some of which should be alterable by the user to reflect their particular needs. For example, a Login System might need a unique Salt value set to encrypt user passwords. This value should be unique to each application.
 
-Engines provides a simple mechanism to handle this, and it's already been hinted at above. Within any module, a new method is now available: <tt>config</tt>. This method creates a special <tt>CONFIG</tt> Hash object within the Module it is called, and can be used to store your parameters. For a user to set these parameters, they should reopen the module (before the corresponding Engines.start call), as follows:
+Engines provides a simple mechanism to handle this. Within any module, a new method is now available - <tt>config</tt>. This method creates a special <tt>CONFIG</tt> Hash object within the Module it is called, and can be used to store your parameters. For a user to set these parameters, they should reopen the module (before the corresponding Engines.start call), as follows:
 
   module MyModule
     config :some_option, "really_important_value"

@@ -84,7 +84,11 @@ namespace :db do
             end
           end
           if ActiveRecord::Base.schema_format == :ruby && !engines_to_migrate.empty?
-            Rake::Task[:db_schema_dump].invoke
+            if Rake::Task["db:schema:dump"].nil?
+              Rake::Task[:db_schema_dump].invoke # Rails 1.0
+            else
+              Rake::Task["db:schema:dump"].invoke
+            end
           end
         end
       end
