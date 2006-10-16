@@ -61,10 +61,12 @@ class Engine
     end
   end
   
+  # A shortcut to the Engines logger
   def log
     Engines.log
   end
   
+  # Activates this engine
   def start(options={})
     # copy the files unless indicated otherwise
     mirror_engine_files unless options[:copy_files] == false

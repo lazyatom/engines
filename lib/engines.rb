@@ -117,12 +117,14 @@ module Engines
   end
 
   # Starts all available engines. Plugins are considered engines if they
-  # include an init_engine.rb file, or they are named <something>_engine.
+  # include an init_engine.rb file, or they are named <something>_engine,
+  # or <something>_bundle.
   def self.start_all(options={})
     plugins = Dir[File.join(self.root, "*")]
     Engines.log.debug "considering plugins: #{plugins.inspect}"
-    plugins.each { |plugin|
-      start_engine(engine_name, options) if is_engine?(plugin)
+    plugins.each { |plugin_dir|
+      engine_name = File.basename(plugin_dir)
+      start_engine(engine_name, options) if is_engine?(plugin_dir)
     }
   end
 
