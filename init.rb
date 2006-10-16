@@ -34,20 +34,9 @@ require 'bundles'
 
 module ::Engines::Version
   Major = 1 # change implies compatibility breaking with previous versions
-  Minor = 1 # change implies backwards-compatible change to API
-  Release = 4 # incremented with bug-fixes, updates, etc.
+  Minor = 2 # change implies backwards-compatible change to API
+  Release = 0 # incremented with bug-fixes, updates, etc.
 end
 
-#--
-# Create the Engines directory if it isn't present
-#++
-if !File.exist?(Engines.config(:root))
-  Engines.log.debug "Creating engines directory in /vendor"
-  FileUtils.mkdir_p(Engines.config(:root))
-end
-
-# Keep a hold of the Rails Configuration object
-Engines.rails_config = config
-
-# Initialize the routing (controller_paths)
-Engines.initialize_routing
+# Initialize engines
+Engines.initialize_subsystem(config)
