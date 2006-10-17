@@ -1,9 +1,9 @@
 require 'logger'
 
-module Engines
-  # The DummyLogger is a class which might pass through to a real Logger
+module DummyLogging
+  # The LoggerWrapper is a class which might pass through to a real Logger
   # if one is assigned. However, it can gracefully swallow any logging calls
-  # if there is now Logger assigned.
+  # if there is no real Logger assigned.
   class LoggerWrapper
     def initialize(logger=nil)
       set_logger(logger)
@@ -21,26 +21,22 @@ module Engines
     end
   end
 
-  LOGGER = Engines::LoggerWrapper.new
+  LOGGER = LoggerWrapper.new
 
-  class << self
-    
-    #--------------------------------------------------------------------------
-    # Initialising the logger
-    #++------------------------------------------------------------------------
-    
-    # Create a new Logger instance for Engines, with the given outputter and level    
-    def create_logger(outputter=STDOUT, level=Logger::INFO)
-      LOGGER.set_logger(Logger.new(outputter, level))
-    end
-    # Sets the Logger instance that Engines will use to send logging information to
-    def set_logger(logger)
-      Engines::LOGGER.set_logger(logger) # TODO: no need for Engines:: part
-    end
-    # Retrieves the current Logger instance
-    def log
-      Engines::LOGGER # TODO: no need for Engines:: part
-    end
-    alias :logger :log
+  # Create a new Logger instance for Engines, with the given outputter and level    
+  def create_logger(outputter=STDOUT, level=Logger::INFO)
+    LOGGER.set_logger(Logger.new(outputter, level))
   end
+
+  # Sets the Logger instance to send logging information to
+  def set_logger(logger)
+    LOGGER.set_logger(logger)
+  end
+
+  # Retrieves the current Logger instance
+  def log
+    LOGGER
+  end
+  alias_method :logger, :log
+
 end  

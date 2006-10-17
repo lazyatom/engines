@@ -1,12 +1,10 @@
-module Engines
-
-  module RailsVersions
-    Rails_1_0 = 0
-    Rails_1_1 = 1
-    Rails_1_2 = 2
-    Edge = -1
-    Unknown = -2
-  end
+module RailsVersionDetection
+  
+  Rails_1_0 = 0
+  Rails_1_1 = 1
+  Rails_1_2 = 2
+  Edge = -1
+  Unknown = -2
 
   # We need to know the version of Rails that we are running before we
   # can override any of the dependency stuff, since Rails' own behaviour
@@ -14,7 +12,7 @@ module Engines
   # that the Rails::VERSION constant is loaded, because such things could
   # not automatically be achieved prior to 1.1, and the location of the
   # file moved in 1.1.1!
-  def self.load_rails_version
+  def load_rails_version
     # At this point, we can't even rely on RAILS_ROOT existing, so we have to figure
     # the path to RAILS_ROOT/vendor/rails manually
     rails_root = File.expand_path(
@@ -45,23 +43,23 @@ module Engines
     end
   end
   
-  def self.on_edge?
+  def on_edge?
     const_defined?(:EdgeRails) && EdgeRails
   end
     
-  def self.on_rails_1_0?
+  def on_rails_1_0?
     Rails::VERSION::STRING =~ /\A1\.0\./
   end
   
-  def self.on_rails_1_1?
+  def on_rails_1_1?
     Rails::VERSION::STRING =~ /\A1\.1\./
   end
   
-  def self.on_rails_1_2?
+  def on_rails_1_2?
     Rails::VERSION::STRING =~ /\A1\.2\./
   end
   
-  def self.detected_rails_version
+  def detected_rails_version
     if on_edge?
       RailsVersions::Edge
     elsif on_rails_1_2?
