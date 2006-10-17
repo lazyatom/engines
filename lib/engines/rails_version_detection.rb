@@ -62,15 +62,15 @@ module Engines
   
     def detected_rails_version
       if on_edge?
-        RailsVersions::Edge
+        Edge
       elsif on_rails_1_2?
-        RailsVersions::Rails_1_2
+        Rails_1_2
       elsif on_rails_1_1?
-        RailsVersions::Rails_1_1
+        Rails_1_1
       elsif on_rails_1_0?
-        RailsVersions::Rails_1_0
+        Rails_1_0
       else
-        RailsVersions::Unknown
+        Unknown
       end
     end
   end

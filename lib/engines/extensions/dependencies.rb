@@ -9,17 +9,17 @@ module ::Dependencies
   # we are running against
   def require_or_load(*args)
     case Engines.detected_rails_version
-    when Engines::RailsVersions::Edge
+    when Engines::RailsVersionDetection::Edge
       rails_edge_require_or_load(*args)
     
-    when Engines::RailsVersions::Rails_1_2
+    when Engines::RailsVersionDetection::Rails_1_2
       rails_1_2_require_or_load(*args)
     
-    when Engines::RailsVersions::Rails_1_1
+    when Engines::RailsVersionDetection::Rails_1_1
       file_name = args.first
       rails_1_1_require_or_load(file_name)
     
-    when Engines::RailsVersions::Rails_1_0
+    when Engines::RailsVersionDetection::Rails_1_0
       file_name = args.first
       rails_1_0_require_or_load(file_name)
     
