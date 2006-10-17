@@ -1,5 +1,6 @@
 require 'engines/manager'
 require 'engines/rails_version_detection'
+require 'engines/dummy_logging'
 
 module ::Engines
   # The directory from which to load engines
