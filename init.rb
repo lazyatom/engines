@@ -29,7 +29,7 @@
 #++
 
 # Load the engines & bundles extensions
-require 'engines'
+require 'engine_manager'
 require 'bundles'
 
 module ::Engines::Version

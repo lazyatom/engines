@@ -9,8 +9,8 @@ require 'engine'
 
 class EngineManager
   include Singleton
-  include RailsVersionDetection
-  include DummyLogging
+  include Engines::RailsVersionDetection
+  include Engines::DummyLogging
   
   attr_reader :all
   
