@@ -26,8 +26,12 @@ module ::Engines
     # We need to be able to set the 'current' engine being migrated.
     cattr_accessor :current_engine
 
-    class << self
-
+    class << self   
+      def migrate_engine(engine, version)
+        self.current_engine = engine
+        migrate(engine.migration_directory, version)
+      end
+      
       def schema_info_table_name
         ActiveRecord::Base.wrapped_table_name Engines.schema_info_table
       end

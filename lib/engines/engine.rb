@@ -198,8 +198,17 @@ module Engines
       "/#{File.basename(Engines.public_dir)}/#{name}"
     end
   
-    private 
+    # The directory containing this engines migrations
+    def migration_directory
+      File.join(self.root, 'db', 'migrate')
+    end
+    
+    # Migrate this engine to the given version    
+    def migrate(version = nil)
+      Engines::EngineMigrator.migrate_engine(self, version)
+    end
   
+    private
       def destination_public_dir
         File.join(Engines.public_dir, name)
       end

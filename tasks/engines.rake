@@ -73,11 +73,9 @@ namespace :db do
           puts "To control individual engine versions, use the ENGINE=<engine> argument"
         else
           engines_to_migrate.each do |engine| 
-            Engines::EngineMigrator.current_engine = engine
-            migration_directory = File.join(engine.root, 'db', 'migrate')
-            if File.exist?(migration_directory)
+            if File.exist?(engine.migration_directory)
               puts "Migrating engine '#{engine.name}'"
-              Engines::EngineMigrator.migrate(migration_directory, ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
+              engine.migrate(ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
             else
               puts "The db/migrate directory for engine '#{engine.name}' appears to be missing."
               puts "Should be: #{migration_directory}"
