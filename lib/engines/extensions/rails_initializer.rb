@@ -2,10 +2,17 @@ require 'engines/plugin_set'
 
 module ::Rails
   
+  # The set of all loaded plugins
   mattr_accessor :plugins
   
   class Initializer
+    
+    # Loads a plugin, performing the extra load path/public file magic of
+    # engines.
     def load_plugin_with_engine_additions(directory)
+      name = plugin_name(directory)
+      return false if loaded_plugins.include?(name)
+      
       puts "loading plugin from #{directory} with engine additions"
       
       plugin = Plugin.new(plugin_name(directory), directory)
@@ -15,7 +22,7 @@ module ::Rails
       # it's instance, which can then be used in it's initialization
       load_plugin_without_engine_additions(directory)
       
-      if Engines.support_legacy_engines
+      if Engines.legacy_support
         # load a legacy init_engine.rb file, if it exists
         init_engine_path = File.join(directory, 'init_engine.rb')
         has_init_engine = File.file?(init_engine_path)
@@ -36,37 +43,33 @@ module ::Rails
       
       true
     end 
-    
     alias_method_chain :load_plugin, :engine_additions
+
     
-    # so, we're about to augment the plugin finding methods with some new powers.    
-    def load_all_remaining_plugins
-      puts "loading remaining plugins from #{configuration.plugin_paths.inspect}"
-      find_unloaded_plugins(configuration.plugin_paths).sort.each { |path| load_plugin path }
-      $LOAD_PATH.uniq!
+    # Allow the engines plugin to do whatever it needs to do after Rails has
+    # loaded, and then call the actual after_initialize block.
+    def after_initialize_with_engine_additions
+      Engines.after_initialize
+      after_initialize_without_engine_additions
     end
+    alias_method_chain :after_initialize, :engine_additions
     
     protected
-      def find_unloaded_plugins(*base_paths)
-        #puts "loading remaining plugins from #{base_paths.inspect}"
-        base_paths.flatten.inject([]) do |plugins, base_path|
-          Dir.glob(File.join(base_path, '*')).each do |path|
-            if plugin_path?(path)
-              plugins << path if !plugin_loaded?(path)
-            elsif File.directory?(path)
-              plugins += find_unloaded_plugins(path)
-            end
-          end
-          plugins
-        end      
+    
+      def plugin_enabled_with_engine_additions?(path)
+        Engines.load_all_plugins || plugin_enabled_without_engine_additions?(path)
       end
-
-      # lets treat legacy-style engines as plugins too. Init_engine.rb == init.rb
-      def plugin_path_with_engine_path?(path)
-        (File.directory?(path) && File.file?(File.join(path, 'init_engine.rb'))) || plugin_path_without_engine_path?(path)
+      alias_method_chain :plugin_enabled?, :engine_additions
+    
+      if Engines.legacy_support
+        # lets treat legacy-style engines as plugins too. Init_engine.rb == init.rb
+        def plugin_path_with_legacy_engines?(path)
+          (File.directory?(path) && 
+           File.file?(File.join(path, 'init_engine.rb'))) || 
+          plugin_path_without_legacy_engines?(path)
+        end
+        alias_method_chain :plugin_path?, :legacy_engines
       end
-
-      alias_method_chain :plugin_path?, :engine_path
       
       def plugin_name(path)
         File.basename(path)
