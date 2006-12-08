@@ -1,7 +1,12 @@
 require 'engines'
+require 'engines/extensions/rails'
+
+puts "loading engines plugin"
 
 # Store some information about the plugin subsystem
-Engines.rails_config = config
+Rails.configuration = config
+
+# We need a hook into this so we can get freaky with the plugin loading itself
 Engines.rails_initializer = self
 
 Engines.init

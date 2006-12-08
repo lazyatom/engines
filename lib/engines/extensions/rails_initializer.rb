@@ -1,10 +1,6 @@
-require 'engines/plugin_set'
+require 'engines/plugin_list'
 
 module ::Rails
-  
-  # The set of all loaded plugins
-  mattr_accessor :plugins
-  
   class Initializer
     
     # Loads a plugin, performing the extra load path/public file magic of
@@ -15,21 +11,23 @@ module ::Rails
       
       puts "loading plugin from #{directory} with engine additions"
       
+      # add the Plugin object
       plugin = Plugin.new(plugin_name(directory), directory)
-      
+      Rails.plugins << plugin
+            
       # do the other stuff that load_plugin used to do. This includes
       # allowing the plugin's init.rb to set configuration options on
       # it's instance, which can then be used in it's initialization
       load_plugin_without_engine_additions(directory)
       
-      if Engines.legacy_support
+      if Engines.legacy_support?
+        # access to the current plugin/engine object
+        Engines.current = plugin
+
         # load a legacy init_engine.rb file, if it exists
         init_engine_path = File.join(directory, 'init_engine.rb')
         has_init_engine = File.file?(init_engine_path)
       
-        # legacy access to the current plugin/engine object
-        Engines.current = plugin
-
         # Evaluate init_engine.rb.
         silence_warnings { eval(IO.read(init_engine_path), binding, init_engine_path) } if has_init_engine
       end
@@ -37,10 +35,6 @@ module ::Rails
       # perform additional loading tasks
       plugin.load
             
-      # add the Plugin object
-      Rails.plugins ||= PluginSet.new
-      Rails.plugins << plugin
-      
       true
     end 
     alias_method_chain :load_plugin, :engine_additions
@@ -57,18 +51,19 @@ module ::Rails
     protected
     
       def plugin_enabled_with_engine_additions?(path)
-        Engines.load_all_plugins || plugin_enabled_without_engine_additions?(path)
+        Engines.load_all_plugins? || plugin_enabled_without_engine_additions?(path)
       end
       alias_method_chain :plugin_enabled?, :engine_additions
     
-      if Engines.legacy_support
+      if Engines.legacy_support?
         # lets treat legacy-style engines as plugins too. Init_engine.rb == init.rb
-        def plugin_path_with_legacy_engines?(path)
+        def plugin_path_with_legacy_engine_support?(path)
+          puts "calling engines plugin_path #{path} for plugin..."
           (File.directory?(path) && 
            File.file?(File.join(path, 'init_engine.rb'))) || 
-          plugin_path_without_legacy_engines?(path)
+          plugin_path_without_legacy_engine_support?(path)
         end
-        alias_method_chain :plugin_path?, :legacy_engines
+        alias_method_chain :plugin_path?, :legacy_engine_support
       end
       
       def plugin_name(path)

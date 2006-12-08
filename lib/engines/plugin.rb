@@ -40,7 +40,7 @@ class Plugin
   end
   
   def load
-    #inject_into_load_path
+    inject_into_load_path
     #mirror_public_assets
   end
   
