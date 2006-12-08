@@ -1,0 +1,14 @@
+Upgrading from Engines 1.1.x to Engines 1.2
+===========================================
+
+As far as possible, this version of the engines plugin works just like the old one used to. However, to take advantage of some of the sweet new features, you might want to make the following changes in your application.
+
+  $ script/generate engine_upgrade_migration
+  $ rake db:migrate
+  
+
+What this does
+--------------
+
+* changes the engine_schema table to plugin_schema
+* renames RAILS_ROOT/public/engine_files to RAILS_ROOT/public/plugin_assets
