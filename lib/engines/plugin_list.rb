@@ -4,7 +4,7 @@ class PluginList < Array
     if name_or_index.is_a?(Fixnum)
       super
     else
-      self.find { |plugin| plugin.name.to_s == name.to_s }
+      self.find { |plugin| plugin.name.to_s == name_or_index.to_s }
     end
   end
 end
