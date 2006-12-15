@@ -20,6 +20,8 @@ class Plugin
   # public directory
   attr_accessor :public_dir
   
+  # The default set of code paths which will be added to $LOAD_PATH
+  # and Dependencies.load_paths
   def default_code_paths
     %w(app/controllers app/helpers app/models components)
   end
@@ -51,28 +53,30 @@ class Plugin
   def inject_into_load_path
     
     # Add relevant paths under the engine root to the load path
-    code_paths.each do |dir| 
-      path = File.join(root, dir)
+    code_paths.map { |p| File.join(root, p) }.each do |path| 
       if File.directory?(path)
         # Add to the load paths
-        $LOAD_PATH.delete(path) # remove it if it already exists
+        #$LOAD_PATH.delete(path) # remove it if it already exists
         index = $LOAD_PATH.index(Engines.rails_final_load_path)
         $LOAD_PATH.insert(index + 1, path)
+        $LOAD_PATH.uniq!
 
         # Add to the dependency system, for autoloading.
-        ::Dependencies.load_paths.delete(path)
+        #::Dependencies.load_paths.delete(path)
         index = ::Dependencies.load_paths.index(Engines.rails_final_dependency_load_path)
         ::Dependencies.load_paths.insert(index + 1, path)
+        ::Dependencies.load_paths.uniq!
       end
     end
     
     # Add controllers to the Routing system specifically. TODO - is this needed?
     plugin_controllers = File.join(root, 'app', 'controllers')
     plugin_components = File.join(root, 'components')
-    ActionController::Routing.controller_paths.delete(plugin_controllers)
+    #ActionController::Routing.controller_paths.delete(plugin_controllers)
     ActionController::Routing.controller_paths << plugin_controllers if File.directory?(plugin_controllers)
-    ActionController::Routing.controller_paths.delete(plugin_components)
+    #ActionController::Routing.controller_paths.delete(plugin_components)
     ActionController::Routing.controller_paths << plugin_components if File.directory?(plugin_components)
+    ActionController::Routing.controller_paths.uniq!
   end
 
   # Replicates the subdirectories under the plugins's /public or /assets directory into
@@ -112,7 +116,7 @@ class Plugin
           #   engine_name/javascript
           #
           relative_dir = dir.gsub(File.join(root, "public"), name)
-          target_dir = File.join(Engines.public_dir, relative_dir)
+          target_dir = File.join(Engines.public_directory, relative_dir)
           unless File.exist?(target_dir)
             #log.debug "Creating directory '#{target_dir}'"
             FileUtils.mkdir_p(target_dir)
@@ -144,7 +148,7 @@ class Plugin
 
   # return the path to this Engine's public files (with a leading '/' for use in URIs)
   def asset_base_uri
-    "/#{File.basename(Engines.public_dir)}/#{name}"
+    "/#{File.basename(Engines.public_directory)}/#{name}"
   end
 
   # The directory containing this engines migrations
@@ -152,8 +156,15 @@ class Plugin
     File.join(self.root, 'db', 'migrate')
   end
   
+  # Returns the version number of the latest migration for this plugin
+  def latest_migration
+    migrations = Dir[migration_directory+"/*.rb"]
+    return nil if migrations.empty?
+    migrations.map { |p| File.basename(p) }.sort.last.match(/(\d+)\_/)[1]
+  end
+  
   # Migrate this engine to the given version    
   def migrate(version = nil)
-    Engines::EngineMigrator.migrate_engine(self, version)
+    Engines::PluginMigrator.migrate_plugin(self, version)
   end  
 end
