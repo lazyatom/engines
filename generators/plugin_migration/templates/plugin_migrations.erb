@@ -1,0 +1,13 @@
+class <%= migration_file_name.classify %> < ActiveRecord::Migration
+  def self.up
+  <%- plugins.each do |plugin| -%>
+    Rails.plugins["<%= plugin.name %>"].migrate(<%= new_versions[plugin.name] %>)
+  <%- end -%>
+  end
+
+  def self.down
+  <%- plugins.each do |plugin| -%>
+    Rails.plugins["<%= plugin.name %>"].migrate(<%= old_versions[plugin.name] %>)
+  <%- end -%>
+  end
+end
