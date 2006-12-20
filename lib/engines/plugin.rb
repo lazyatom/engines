@@ -156,7 +156,7 @@ class Plugin
   def latest_migration
     migrations = Dir[migration_directory+"/*.rb"]
     return nil if migrations.empty?
-    migrations.map { |p| File.basename(p) }.sort.last.match(/(\d+)\_/)[1]
+    migrations.map { |p| File.basename(p) }.sort.last.match(/0*(\d+)\_/)[1].to_i
   end
   
   # Migrate this engine to the given version    

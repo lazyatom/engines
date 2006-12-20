@@ -10,7 +10,7 @@ Description:
   and removed during the development process
 
 Example:
-  ./script/generate plugin_migration [PLUGINS=<plugin_name>,<plugin_name>]
+  ./script/generate plugin_migration [<plugin_name> <another_plugin_name> ...]
 
   This will generate:
 
@@ -20,3 +20,26 @@ Example:
               |- xxx_plugin_migrations.rb
 
   which contains the migrations for the given plugin(s)
+  
+  
+Advanced Usage:
+
+There may be situations where you need *complete* control over the migrations
+of plugins in your application, migrating a certainly plugin down to X, and
+another plugin up to Y, where neither X or Y are the latest migrations for those
+plugins.
+
+For those unfortunate few, I have two pieces of advice:
+
+ 1. Why? This is a code smell [http://c2.com/xp/CodeSmell.html].
+ 
+ 2. Well, OK. Don't panic. You can completely control plugin migrations by
+    creating your own migrations. To manually migrate a plugin to a specific
+    version, simply use
+    
+      Rails.plugins[:your_plugin_name].migrate(version)
+      
+    where version is the integer of the migration this plugin should end
+    up at.
+    
+With great power comes great responsibility. Use this wisely.
