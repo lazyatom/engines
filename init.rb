@@ -12,9 +12,9 @@ Engines.init(config, self)
  :rails_initializer,
  :dependencies,
  :active_record,
- :migrations
+ :migrations,
 # :action_view,
-# :public_asset_helpers
+ :public_asset_helpers
 ].each do |f|
   require "engines/rails_extensions/#{f}"
 end

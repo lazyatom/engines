@@ -125,7 +125,7 @@ class Plugin
         end
       }
     rescue Exception => e
-      logger.warn "WARNING: Couldn't create the engine public file structure for engine '#{name}'; Error follows:"
+      logger.warn "WARNING: Couldn't create the public file structure for plugin '#{name}'; Error follows:"
       logger.warn e
     end
   end
