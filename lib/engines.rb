@@ -1,6 +1,10 @@
 require "engines/plugin_list"
 require "engines/plugin"
 
+def logger
+  RAILS_DEFAULT_LOGGER
+end
+
 module ::Engines
   # The name of the public directory to mirror public engine assets into
   mattr_accessor :public_directory
@@ -49,7 +53,7 @@ module ::Engines
     
     check_for_star_wildcard
     
-    puts "engines has started."
+    logger.debug "engines has started."
   end
 
   # Whether or not to load legacy 'engines' (with init_engine.rb) as if they were plugins
@@ -91,7 +95,7 @@ module ::Engines
   # all Rails' defaults
   def self.store_load_path_marker
     self.rails_final_load_path = $LOAD_PATH.last
-    puts "Rails final load path: #{self.rails_final_load_path}"
+    logger.debug "Rails final load path: #{self.rails_final_load_path}"
   end
 
   # Store a record of the last entry in the dependency system's load path.
@@ -99,7 +103,7 @@ module ::Engines
   # all Rails' defaults
   def self.store_dependency_load_path_marker
     self.rails_final_dependency_load_path = ::Dependencies.load_paths.last
-    puts "Rails final dependency load path: #{self.rails_final_dependency_load_path}"
+    logger.debug "Rails final dependency load path: #{self.rails_final_dependency_load_path}"
   end
   
   # Create Plugin instances for plugins loaded before Engines
@@ -108,12 +112,12 @@ module ::Engines
       plugin_path = File.join(self.find_plugin_path(name), name)
       unless Rails.plugins[name]
         plugin = Plugin.new(name, plugin_path)
-        puts "enginizing plugin: #{plugin.name} from #{plugin_path}"
+        logger.debug "enginizing plugin: #{plugin.name} from #{plugin_path}"
         plugin.load # injects the extra directories into the load path, and mirrors public files
         Rails.plugins << plugin
       end
     end
-    puts "plugins is now: #{Rails.plugins.map { |p| p.name }.join(", ")}"
+    logger.debug "plugins is now: #{Rails.plugins.map { |p| p.name }.join(", ")}"
   end  
   
   # Ensure that the plugin asset subdirectory of RAILS_ROOT/public exists, and
@@ -121,7 +125,7 @@ module ::Engines
   def self.initialize_base_public_directory
     if !File.exist?(self.public_directory)
       # create the public/engines directory, with a warning message in it.
-      #log.debug "Creating public engine files directory '#{@public_dir}'"
+      logger.debug "Creating public engine files directory '#{self.public_directory}'"
       FileUtils.mkdir(self.public_directory)
       message = %{Files in this directory are automatically generated from your Rails Engines.
 They are copied from the 'public' directories of each engine into this directory
@@ -157,7 +161,7 @@ should edit the files within the <engine_name>/public/ directory itself.}
   #
   def self.after_initialize
      if self.load_all_plugins?
-      puts "loading remaining plugins from #{Rails.configuration.plugin_paths.inspect}"
+      logger.debug "loading remaining plugins from #{Rails.configuration.plugin_paths.inspect}"
       # this will actually try to load ALL plugins again, but any that have already 
       # been loaded will be ignored.
       rails_initializer.load_all_plugins

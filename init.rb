@@ -8,9 +8,6 @@ require "engines/rails_extensions/rails_initializer"
 Engines.init(config, self)
 
 # Now that we've defined the engines module, load up any extensions
-#require "engines/rails_extensions"
-
-
 [:rails,
  :rails_initializer,
  :dependencies,

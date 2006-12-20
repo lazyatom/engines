@@ -15,4 +15,3 @@ end
 
 # Set ActiveRecord to ignore the plugin schema table by default
 ::ActiveRecord::SchemaDumper.ignore_tables << Engines.schema_info_table
-puts "ignoring: #{::ActiveRecord::SchemaDumper.ignore_tables.inspect}"

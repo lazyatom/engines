@@ -23,7 +23,7 @@ module Engines::RailsExtensions::RailsInitializer
     name = plugin_name(directory)
     return false if loaded_plugins.include?(name)
     
-    puts "loading plugin from #{directory} with engine additions"
+    logger.debug "loading plugin from #{directory} with engine additions"
     
     # add the Plugin object
     plugin = Plugin.new(plugin_name(directory), directory)

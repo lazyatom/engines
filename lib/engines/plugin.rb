@@ -18,7 +18,7 @@ class Plugin
   
   # The directory in this plugin to mirror into the shared plugin 
   # public directory
-  attr_accessor :public_dir
+  attr_accessor :public_directory
   
   # The default set of code paths which will be added to $LOAD_PATH
   # and Dependencies.load_paths
@@ -29,8 +29,8 @@ class Plugin
   # Attempts to detect the directory to use for public files.
   # If 'public' exists in the plugin, this will be used. If 'plugin' is missing
   # but 'assets' is found, 'assets' will be used.
-  def default_public_dir
-    %w(public assets).select { |dir| File.directory?(File.join(root, dir)) }.first || "public"
+  def default_public_directory
+    %w(assets public).select { |dir| File.directory?(File.join(root, dir)) }.first || "assets"
   end
   
   def initialize(name, path)
@@ -38,14 +38,14 @@ class Plugin
     @root = path
     
     @code_paths = default_code_paths
-    @public_dir = default_public_dir
+    @public_directory = default_public_directory
   end
   
   def load
-    puts "Plugin '#{name}': starting load."
+    logger.debug "Plugin '#{name}': starting load."
     inject_into_load_path
     mirror_public_assets
-    puts "Plugin '#{name}': loaded."
+    logger.debug "Plugin '#{name}': loaded."
   end
   
   # Adds all directories in the /app and /lib directories within the engine
@@ -82,39 +82,29 @@ class Plugin
   
     begin
 
-      destination_public_dir = File.join(Engines.public_directory, name)  
-      source_public_dir = File.join(root, @public_dir)
-
-      #log.debug "Attempting to copy plugin plugin asset files from '#{source_public_dir}'"
+      #destination = File.join(Engines.public_directory, name)  
+      source = File.join(root, self.public_directory)
 
       # if there is no public directory, just return after this file
-      return if !File.exist?(source_public_dir)
+      return if !File.exist?(source)
 
-      source_files = Dir[source_public_dir + "/**/*"]
+      logger.debug "Attempting to copy plugin plugin asset files from '#{source}' to '#{Engines.public_directory}'"
+
+      source_files = Dir[source + "/**/*"]
       source_dirs = source_files.select { |d| File.directory?(d) }
       source_files -= source_dirs  
+      source_dirs.map! { |d| File.join(name, d.gsub(source, '')) }
+      source_files.map! { |f| File.join(name, f.gsub(source, '')) }
   
-      #log.debug "source dirs: #{source_dirs.inspect}"
-
-      # Create the engine_files/<something>_engine dir if it doesn't exist
-      if !File.exists?(self.destination_public_dir)
-        # Create <something>_engine dir with a message
-        #log.debug "Creating #{self.destination_public_dir} public dir"
-        FileUtils.mkdir_p(self.destination_public_dir)
-      end
+      logger.debug "source dirs: #{source_dirs.inspect}"
+      logger.debug "source files: #{source_files.inspect}"
 
       # create all the directories, transforming the old path into the new path
       source_dirs.uniq.each { |dir|
         begin        
-          # strip out the base path and add the result to the public path, i.e. replace 
-          #   ../script/../vendor/plugins/engine_name/public/javascript
-          # with
-          #   engine_name/javascript
-          #
-          relative_dir = dir.gsub(File.join(root, "public"), name)
-          target_dir = File.join(Engines.public_directory, relative_dir)
+          target_dir = File.join(Engines.public_directory, dir)
           unless File.exist?(target_dir)
-            #log.debug "Creating directory '#{target_dir}'"
+            logger.debug "Creating directory '#{target_dir}'"
             FileUtils.mkdir_p(target_dir)
           end
         rescue Exception => e
@@ -122,23 +112,21 @@ class Plugin
         end
       }
 
-      # copy all the files, transforming the old path into the new path
       source_files.uniq.each { |file|
         begin
-          # change the path from the ENGINE ROOT to the public directory root for this engine
-          target = file.gsub(File.join(root, "public"), destination_public_dir)
-          unless File.exist?(target) && FileUtils.identical?(file, target)
-            #log.debug "copying file '#{file}' to '#{target}'"
-            FileUtils.cp(file, target)
+          src = File.join(self.root, self.public_directory, file.gsub(self.name, ''))
+          target = File.join(Engines.public_directory, file)
+          unless File.exist?(target) && FileUtils.identical?(src, target)
+            logger.debug "copying file '#{src}' to '#{target}'"
+            FileUtils.cp(src, target)
           end 
         rescue Exception => e
           raise "Could not copy #{file} to #{target}: \n" + e 
         end
       }
     rescue Exception => e
-      #log.warn "WARNING: Couldn't create the engine public file structure for engine '#{name}'; Error follows:"
-      #log.warn e
-      puts e
+      logger.warn "WARNING: Couldn't create the engine public file structure for engine '#{name}'; Error follows:"
+      logger.warn e
     end
   end
 
