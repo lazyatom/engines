@@ -1,15 +1,23 @@
-require 'engines'
-require 'engines/extensions/rails'
+# First, require the engines module & core methods
+require "engines"
 
-puts "loading engines plugin"
+# Load this before we get actually start engines
+require "engines/rails_extensions/rails_initializer"
 
-# Store some information about the plugin subsystem
-Rails.configuration = config
+# Start the engines mechanism.
+Engines.init(config, self)
 
-# We need a hook into this so we can get freaky with the plugin loading itself
-Engines.rails_initializer = self
+# Now that we've defined the engines module, load up any extensions
+#require "engines/rails_extensions"
 
-Engines.init
 
-require 'engines/plugin'
-require 'engines/extensions/rails_initializer'
+[:rails,
+ :rails_initializer,
+ :dependencies,
+ :active_record,
+ :migrations
+# :action_view,
+# :public_asset_helpers
+].each do |f|
+  require "engines/rails_extensions/#{f}"
+end

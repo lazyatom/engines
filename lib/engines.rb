@@ -1,5 +1,5 @@
-require 'engines/plugin_list'
-require 'engines/plugin'
+require "engines/plugin_list"
+require "engines/plugin"
 
 module ::Engines
   # The name of the public directory to mirror public engine assets into
@@ -25,9 +25,15 @@ module ::Engines
   
   public
     
-  def self.init
+  def self.init(rails_configuration, rails_initializer)
     # First, determine if we're running in legacy mode
     @legacy_support = self.const_defined?(:LegacySupport) && LegacySupport
+
+    # Store some information about the plugin subsystem
+    Rails.configuration = rails_configuration
+
+    # We need a hook into this so we can get freaky with the plugin loading itself
+    self.rails_initializer = rails_initializer    
 
     self.public_directory = default_public_directory
     self.schema_info_table = default_schema_info_table
@@ -36,8 +42,14 @@ module ::Engines
     store_load_path_marker
     store_dependency_load_path_marker
     
-    initialize_plugin_list
-    initialize_base_public_directory    
+    Rails.plugins ||= PluginList.new
+    enginize_previously_loaded_plugins # including this one, as it happens.
+
+    initialize_base_public_directory
+    
+    check_for_star_wildcard
+    
+    puts "engines has started."
   end
 
   # Whether or not to load legacy 'engines' (with init_engine.rb) as if they were plugins
@@ -89,18 +101,23 @@ module ::Engines
     self.rails_final_dependency_load_path = ::Dependencies.load_paths.last
     puts "Rails final dependency load path: #{self.rails_final_dependency_load_path}"
   end
-
-  # Creates the PluginList which holds all loaded plugins. This list also reflects
-  # the load order of any plugins which engines was responsible for loading, i.e.
-  # any loaded via Engines.start, and any loaded as a result of config.plugins
-  # having a "*" value after engines.
-  # Note that the load order of any plugins loaded *before* engines is not reflected
-  # in this list.
-  def self.initialize_plugin_list
-    Rails.plugins ||= PluginList.new
-    Rails.plugins << Plugin.new("engines", File.join(self.find_plugin_path("engines"), "engines"))
-  end
   
+  # Create Plugin instances for plugins loaded before Engines
+  def self.enginize_previously_loaded_plugins
+    Engines.rails_initializer.loaded_plugins.each do |name|
+      plugin_path = File.join(self.find_plugin_path(name), name)
+      unless Rails.plugins[name]
+        plugin = Plugin.new(name, plugin_path)
+        puts "enginizing plugin: #{plugin.name} from #{plugin_path}"
+        plugin.load # injects the extra directories into the load path, and mirrors public files
+        Rails.plugins << plugin
+      end
+    end
+    puts "plugins is now: #{Rails.plugins.map { |p| p.name }.join(", ")}"
+  end  
+  
+  # Ensure that the plugin asset subdirectory of RAILS_ROOT/public exists, and
+  # that we've added a little warning message.
   def self.initialize_base_public_directory
     if !File.exist?(self.public_directory)
       # create the public/engines directory, with a warning message in it.
@@ -114,6 +131,16 @@ should edit the files within the <engine_name>/public/ directory itself.}
       target = File.join(public_directory, "README")
       File.open(target, 'w') { |f| f.puts(message) } unless File.exist?(target)
     end
+  end
+  
+  # Check for a "*" at the end of the plugins list; if one is found, note that
+  # we should load all other plugins once Rails has finished initializing, and
+  # remove the "*"
+  def self.check_for_star_wildcard
+    if Rails.configuration.plugins.last == "*"
+      Rails.configuration.plugins.pop
+      @load_all_plugins = true
+    end 
   end
 
 
@@ -129,39 +156,13 @@ should edit the files within the <engine_name>/public/ directory itself.}
   # * ... nothing else right now.
   #
   def self.after_initialize
-    # if the patch in http://dev.rubyonrails.org/ticket/6851 is approved, this
-    # is no longer necessary.
-    enginize_previously_loaded_plugins
-    
-    load_remaining_plugins
-  end
-  
-  # Load any plugins which *were* specifed in config.plugins, but which
-  # Rails::Initializer skipped because the engines plugin hadn't been loaded
-  # yet.
-  def self.enginize_previously_loaded_plugins
-    Rails.configuration.plugins.each do |name|
-      plugin_path = File.join(self.find_plugin_path(name), name)
-      unless Rails.plugins[name]
-        plugin = Plugin.new(name, plugin_path)
-        puts "enginizing plugin: #{plugin.name} from #{plugin_path}"
-        plugin.load # injects the extra directories into the load path, and mirrors public files
-        Rails.plugins << plugin
-      end
-    end
-  end
-  
-  # Loads all plugins using the Rails::Initializer extensions
-  def self.load_remaining_plugins
-    if Rails.configuration.plugins.last == "*"
+     if self.load_all_plugins?
       puts "loading remaining plugins from #{Rails.configuration.plugin_paths.inspect}"
-      @load_all_plugins = true
-      # now call the original method. this will actually try to load ALL plugins
-      # again, but any that have already been loaded will be ignored.
-      rails_initializer.load_plugins 
+      # this will actually try to load ALL plugins again, but any that have already 
+      # been loaded will be ignored.
+      rails_initializer.load_all_plugins
     end
-  end
-  
+  end  
   
   
   #-
@@ -178,4 +179,4 @@ should edit the files within the <engine_name>/public/ directory itself.}
   def self.plugin_name(path)
     File.basename(path)
   end
-end  
+end

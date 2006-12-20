@@ -1,0 +1,2 @@
+module Engines::RailsExtensions
+end

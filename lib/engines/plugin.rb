@@ -56,13 +56,11 @@ class Plugin
     code_paths.map { |p| File.join(root, p) }.each do |path| 
       if File.directory?(path)
         # Add to the load paths
-        #$LOAD_PATH.delete(path) # remove it if it already exists
         index = $LOAD_PATH.index(Engines.rails_final_load_path)
         $LOAD_PATH.insert(index + 1, path)
         $LOAD_PATH.uniq!
 
         # Add to the dependency system, for autoloading.
-        #::Dependencies.load_paths.delete(path)
         index = ::Dependencies.load_paths.index(Engines.rails_final_dependency_load_path)
         ::Dependencies.load_paths.insert(index + 1, path)
         ::Dependencies.load_paths.uniq!
@@ -72,9 +70,7 @@ class Plugin
     # Add controllers to the Routing system specifically. TODO - is this needed?
     plugin_controllers = File.join(root, 'app', 'controllers')
     plugin_components = File.join(root, 'components')
-    #ActionController::Routing.controller_paths.delete(plugin_controllers)
     ActionController::Routing.controller_paths << plugin_controllers if File.directory?(plugin_controllers)
-    #ActionController::Routing.controller_paths.delete(plugin_components)
     ActionController::Routing.controller_paths << plugin_components if File.directory?(plugin_components)
     ActionController::Routing.controller_paths.uniq!
   end
@@ -147,8 +143,8 @@ class Plugin
   end
 
   # return the path to this Engine's public files (with a leading '/' for use in URIs)
-  def asset_base_uri
-    "/#{File.basename(Engines.public_directory)}/#{name}"
+  def public_asset_directory
+    "#{File.basename(Engines.public_directory)}/#{name}"
   end
 
   # The directory containing this engines migrations
