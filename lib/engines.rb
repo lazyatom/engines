@@ -12,13 +12,16 @@ module ::Engines
   # The table in which to store plugin schema information
   mattr_accessor :schema_info_table
 
-  # a reference to the currently-loaded plugin. This is present to support
-  # legacy engines; it's preferred to use Rails.plugins[name] in your plugin's
-  # init.rb file in order to get the Plugin instance.
-  mattr_accessor :current  
-  
   # A reference to the current Rails::Initializer instance
   mattr_accessor :rails_initializer
+  
+  
+  #--
+  # These attributes control the behaviour of the engines extensions
+  #++
+  
+  # Set this to true if views should *only* be loaded from plugins
+  mattr_accessor :disable_application_view_loading
   
   private
 
@@ -28,6 +31,10 @@ module ::Engines
   mattr_accessor :rails_final_dependency_load_path
   
   public
+    
+  def self.version
+    "#{Version::Major}.#{Version::Minor}.#{Version::Release}"
+  end  
     
   def self.init(rails_configuration, rails_initializer)
     # First, determine if we're running in legacy mode
@@ -41,6 +48,7 @@ module ::Engines
 
     self.public_directory = default_public_directory
     self.schema_info_table = default_schema_info_table
+    self.disable_application_view_loading = false
     @load_all_plugins = false    
     
     store_load_path_marker
@@ -69,6 +77,14 @@ module ::Engines
     @legacy_support
   end
 
+  # a reference to the currently-loaded plugin. This is present to support
+  # legacy engines; it's preferred to use Rails.plugins[name] in your plugin's
+  # init.rb file in order to get the Plugin instance.
+  def self.current
+    Rails.plugins.last
+  end
+
+
   # This is set to true if Engines detects a "*" at the end of
   # the config.plugins array.  
   def self.load_all_plugins?
@@ -83,11 +99,9 @@ module ::Engines
     "plugin_schema_info"
   end
 
-  # The default plugin assets directory, stored under RAILS_ROOT/public.
-  # In legacy support mode, this is RAILS_ROOT/public/engine_files;
-  # Otherwise, it's RAILS_ROOT/public/plugin_assets.
+  # The default plugin assets directory, RAILS_ROOT/public/plugin_assets.
   def self.default_public_directory
-    File.join(RAILS_ROOT, 'public', self.legacy_support? ? 'engine_files' : 'plugin_assets')
+    File.join(RAILS_ROOT, 'public', 'plugin_assets')
   end
 
   # Stores a record of the last path with Rails added to the load path.
