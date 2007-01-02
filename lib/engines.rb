@@ -23,6 +23,14 @@ module ::Engines
   # Set this to true if views should *only* be loaded from plugins
   mattr_accessor :disable_application_view_loading
   
+  # Set this to true if controller/helper code shouldn't be loaded 
+  # from the application
+  mattr_accessor :disable_application_code_loading
+  
+  # Set this ti true if code should not be mixed (i.e. it will be loaded
+  # from the first valid path on $LOAD_PATH)
+  mattr_accessor :disable_code_mixing
+  
   private
 
   # A memo of the bottom of Rails' default load path
@@ -49,6 +57,8 @@ module ::Engines
     self.public_directory = default_public_directory
     self.schema_info_table = default_schema_info_table
     self.disable_application_view_loading = false
+    self.disable_application_code_loading = false
+    self.disable_code_mixing = false
     @load_all_plugins = false    
     
     store_load_path_marker

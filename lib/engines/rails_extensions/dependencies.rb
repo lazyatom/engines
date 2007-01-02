@@ -3,8 +3,10 @@ module Engines::RailsExtensions::Dependencies
     base.class_eval { alias_method_chain :require_or_load, :engine_additions }
   end
   
-  def require_or_load_with_engine_additions(file_name, const_path = nil)
+  def require_or_load_with_engine_additions(file_name, const_path=nil)
     #Engines.log.debug("Engines 1.1 require_or_load: #{file_name}")
+
+    return require_or_load_without_engine_additions(file_name, const_path) if Engines.disable_code_mixing
 
     found = false
 
@@ -23,11 +25,10 @@ module Engines::RailsExtensions::Dependencies
         Rails.plugins.each do |plugin|
  
           plugin_file_name = File.expand_path(File.join(plugin.root, 'app', "#{type}s", $2))
-          #engine_file_name = $1 if engine_file_name =~ /^(.*)\.rb$/
           #Engines.log.debug("checking engine '#{plugin.name}' for '#{plugin_file_name}'")
           if File.exist?("#{plugin_file_name}.rb")
             #Engines.log.debug("==> loading from plugin '#{plugin.name}'")
-            require_or_load_without_engine_additions(plugin_file_name)
+            require_or_load_without_engine_additions(plugin_file_name, const_path)
             found = true
           end
         end
@@ -37,7 +38,11 @@ module Engines::RailsExtensions::Dependencies
     # finally, load any application-specific controller classes using the 'proper'
     # rails load mechanism, EXCEPT when we're testing engines and could load this file
     # from an engine
-    require_or_load_without_engine_additions(file_name) #unless Engines.disable_app_code_mixing && found    
+    if Engines.disable_application_code_loading && found
+      false
+    else
+      require_or_load_without_engine_additions(file_name, const_path)
+    end
   end
 end
 

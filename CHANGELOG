@@ -2,14 +2,17 @@
 
 
 -----
-1.2.0
-
-Made config method optional - it is now no longer used internally by the Engines plugin, and should be explicitly required by individual engines should they wish to use it. This should help avoid any conflicts with other config methods. [Ticket #187]
-The Edge Rails flag is now a constant - module Engines; EdgeRails = true; end - rather than a config flag.
-Moved the bulk of the Rails patches into the lib/extensions folder. Please update test_helpers to reload the testing extensions from the new location (a legacy source file is included in the original place to ease transitioning for the moment)
-Major refactor of internal methods and code into distinct files under lib/
-Ensure that engine module is referenced properly in init_engine.rb [Ticket #166]
-Added slightly saner version checking, via the Engines.on_rails_1_1? (and so on) methods
+1.2.0 - MASSIVE INTERNAL REFACTORING
+Support for Rails < 1.2 has been dropped; if you are using Rails =< 1.1.6, please use Engines 1.1.6, available from http://svn.rails-engines.org/engines/tags/rel_1.1.6
+Engines are dead! Long live plugins! There is now no meaningful notion of an engine - all plugins can take advantage of the more powerful features that the engines plugin provides by including app directories, etc.
+Init_engine.rb is no longer used; please use the plugin-standard init.rb instead.
+Access all loaded plugins via the new Rails.plugins array, and by name using Rails.plugins[:plugin_name].
+Access plugin metadata loaded automatically from about.yml: Rails.plugins[:name].about. Plugin#version is provided directly, for easy access.
+Module.config is has been removed - use mattr_accessor instead, and initialize your default values via the init.rb mechanism.
+Public asset helpers have been rewritten; instead of engine_stylesheet, now use stylesheet_link_tag :name, :plugin => "plugin_name"
+Plugin migrations have been reworked to integrate into the main migration stream. Please run script/generate plugin_migration to create plugin migrations in your main application.
+All references to engines have been removed; For example, any rake tasks which applied to engines now apply to all plugins. The default Rails rake tasks for plugins are overridden where necessary.
+Templates can now be shared via plugins - inspiration gratefully taken from PluginAWeek there :)
 
 
 -----

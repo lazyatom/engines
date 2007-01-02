@@ -53,9 +53,12 @@ end
 # <engine>/component.
 namespace :doc do
 
+  plugins = FileList['vendor/plugins/**'].collect { |plugin| File.basename(plugin) }
+
   namespace :plugins do
     # Define doc tasks for each plugin
     plugins.each do |plugin|
+      desc "Create plugin documentation for '#{plugin}'"
       task(plugin => :environment) do
         plugin_base   = "vendor/plugins/#{plugin}"
         options       = []
@@ -82,12 +85,12 @@ namespace :doc do
 end
 
 namespace :test do
+  desc "Run the plugin tests in vendor/plugins/**/test (or specify with PLUGIN=name)"
   Rake::TestTask.new(:plugins => [:environment, :warn_about_multiple_plugin_testing_with_engines]) do |t|
     t.libs << "test"
     t.pattern = "vendor/plugins/#{ENV['PLUGIN'] || '**'}/test/**/*_test.rb"
     t.verbose = true
   end
-  Rake::Task['test:plugins'].comment = "Run the plugin tests in vendor/plugins/**/test (or specify with PLUGIN=name)"
 
   task :warn_about_multiple_plugin_testing_with_engines do
     puts %{

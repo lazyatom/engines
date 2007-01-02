@@ -50,9 +50,9 @@ class Plugin
     about_path = File.join(self.root, 'about.yml')
     if File.exist?(about_path)
       @about = YAML.load(File.open(about_path).read)
+      @about.stringify_keys!
+      @version = @about["version"]
     end
-    @about.stringify_keys!
-    @version = @about["version"]
   end
   
   def load
