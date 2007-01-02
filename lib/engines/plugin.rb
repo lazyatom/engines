@@ -9,6 +9,9 @@ class Plugin
   # The version of this plugin
   attr_accessor :version
   
+  # The about.yml information, loaded if it exists
+  attr_accessor :about
+  
   # Plugins can add code paths to this attribute in init.rb if they 
   # need plugin directories to be added to the load path, i.e.
   #
@@ -39,6 +42,17 @@ class Plugin
     
     @code_paths = default_code_paths
     @public_directory = default_public_directory
+    
+    load_about_information
+  end
+  
+  def load_about_information
+    about_path = File.join(self.root, 'about.yml')
+    if File.exist?(about_path)
+      @about = YAML.load(File.open(about_path).read)
+    end
+    @about.stringify_keys!
+    @version = @about["version"]
   end
   
   def load
