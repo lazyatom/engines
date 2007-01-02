@@ -16,14 +16,29 @@ module Engines::RailsExtensions::PublicAssetHelpers
     javascript_include_tag_without_engine_additions(*Engines::RailsExtensions::PublicAssetHelpers.pluginify_sources("javascripts", *sources))
   end
   
+  #--
+  # Our modified image_path now takes a 'plugin' option, though it doesn't require it
+  #++
+  
   def image_path_with_engine_additions(source, options={})
+    options.stringify_keys!
     source = Engines::RailsExtensions::PublicAssetHelpers.plugin_source_path(options["plugin"], "images", source) if options["plugin"]
-    image_path_without_engine_additions(source, options)
+    image_path_without_engine_additions(source)
   end
   
   def image_tag_with_engine_additions(source, options={})
-    # TODO
+    options.stringify_keys!
+    if options["plugin"]
+      source = Engines::RailsExtensions::PublicAssetHelpers.plugin_source_path(options["plugin"], "images", source)
+      options.delete("plugin")
+    end
+    image_tag_without_engine_additions(source, options)
   end
+  
+  #--
+  # The following are methods on this module directly because of the weird-freaky way
+  # Rails creates the helper instance that views actually get
+  #++
   
   # convert sources to absolute paths for the given plugin, if any plugin option is given
   def self.pluginify_sources(type, *sources)
@@ -34,6 +49,7 @@ module Engines::RailsExtensions::PublicAssetHelpers
   end  
 
   def self.plugin_source_path(plugin_name, type, source)
+    raise "No plugin called '#{plugin_name}' - please use the full name of a loaded plugin." if Rails.plugins[plugin_name].nil?
     "/#{Rails.plugins[plugin_name].public_asset_directory}/#{type}/#{source}"
   end
 end
