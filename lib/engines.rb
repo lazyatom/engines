@@ -199,7 +199,7 @@ should edit the files within the <engine_name>/public/ directory itself.}
   
   def self.find_plugin_path(name)
     Rails.configuration.plugin_paths.find do |path|
-      File.exist?(File.join(path, name))
+      File.exist?(File.join(path, name.to_s))
     end    
   end
   

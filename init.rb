@@ -14,7 +14,8 @@ Engines.init(config, self)
  :active_record,
  :migrations,
  :templates,
- :public_asset_helpers
+ :public_asset_helpers,
+ :routing
 ].each do |f|
   require "engines/rails_extensions/#{f}"
 end

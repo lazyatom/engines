@@ -13,6 +13,7 @@ Public asset helpers have been rewritten; instead of engine_stylesheet, now use 
 Plugin migrations have been reworked to integrate into the main migration stream. Please run script/generate plugin_migration to create plugin migrations in your main application.
 All references to engines have been removed; For example, any rake tasks which applied to engines now apply to all plugins. The default Rails rake tasks for plugins are overridden where necessary.
 Layouts can now be shared via plugins - inspiration gratefully taken from PluginAWeek's plugin_routing :)
+Actual routing from plugins is now possible, by including routes.rb in your plugin directory and using the from_plugin method in config/routes.rb (Ticket #182)
 
 
 -----
