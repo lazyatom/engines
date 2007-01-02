@@ -3,7 +3,7 @@
 
 -----
 1.2.0 - MASSIVE INTERNAL REFACTORING
-Support for Rails < 1.2 has been dropped; if you are using Rails =< 1.1.6, please use Engines 1.1.6, available from http://svn.rails-engines.org/engines/tags/rel_1.1.6
+!!!Support for Rails < 1.2 has been dropped!!!; if you are using Rails =< 1.1.6, please use Engines 1.1.6, available from http://svn.rails-engines.org/engines/tags/rel_1.1.6
 Engines are dead! Long live plugins! There is now no meaningful notion of an engine - all plugins can take advantage of the more powerful features that the engines plugin provides by including app directories, etc.
 Init_engine.rb is no longer used; please use the plugin-standard init.rb instead.
 Access all loaded plugins via the new Rails.plugins array, and by name using Rails.plugins[:plugin_name].
@@ -12,7 +12,7 @@ Module.config is has been removed - use mattr_accessor instead, and initialize y
 Public asset helpers have been rewritten; instead of engine_stylesheet, now use stylesheet_link_tag :name, :plugin => "plugin_name"
 Plugin migrations have been reworked to integrate into the main migration stream. Please run script/generate plugin_migration to create plugin migrations in your main application.
 All references to engines have been removed; For example, any rake tasks which applied to engines now apply to all plugins. The default Rails rake tasks for plugins are overridden where necessary.
-Templates can now be shared via plugins - inspiration gratefully taken from PluginAWeek there :)
+Layouts can now be shared via plugins - inspiration gratefully taken from PluginAWeek's plugin_routing :)
 
 
 -----

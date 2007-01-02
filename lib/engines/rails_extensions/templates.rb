@@ -75,7 +75,7 @@ module Engines::RailsExtensions::Templates
         paths.unshift(template_path_without_engine_additions) unless Engines.disable_application_view_loading
         paths
       end
-    
+      
       # Return something that Dir[] can glob against
       def template_path_with_engine_additions
         "{#{template_paths.join(",")}}"
