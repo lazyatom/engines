@@ -19,3 +19,6 @@ Engines.init(config, self)
 ].each do |f|
   require "engines/rails_extensions/#{f}"
 end
+
+# Load the testing extensions
+require "engines/testing"

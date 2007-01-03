@@ -107,7 +107,6 @@ Report any issues on http://dev.rails-engines.org. Thanks!
     
     task :setup_plugin_fixtures => "db:test:prepare" do
       # mirror all fixtures into a temporary but known directory
-      require "#{RAILS_ROOT}/vendor/plugins/engines/lib/testing"
       Engines::Testing.setup_plugin_fixtures
     end
   end  
