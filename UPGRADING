@@ -1,0 +1,30 @@
+Upgrading from Engines 1.1.x to Engines 1.2
+===========================================
+
+Changes
+-------
+
+* change the engine_schema table to plugin_schema
+* rename RAILS_ROOT/public/engine_files to RAILS_ROOT/public/plugin_assets
+* engine_image, engine_stylesheet and engine_javascript are gone, replaced with image_tag "blah", :plugin => "name" and so on.
+
+
+
+
+Dropped Features
+----------------
+
+fixture method
+'smart' engine versions - we no longer do fancy stuff with modules, etc
+the magic 'config' module, in preference of mattr_accessor :attribute
+
+
+
+
+Todo
+----
+
+
+when testing multiple plugins, it's possible that view mixing/code mixing will cause
+functionality to bleed between plugins
+- possible add a new test:plugins which tests each one, having only it load?
