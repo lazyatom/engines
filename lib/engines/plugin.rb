@@ -94,50 +94,15 @@ class Plugin
   # within this plugin, the public directory is used in preference.
   def mirror_public_assets
   
-    begin
-
-      #destination = File.join(Engines.public_directory, name)  
+    begin 
       source = File.join(root, self.public_directory)
-
       # if there is no public directory, just return after this file
       return if !File.exist?(source)
 
       logger.debug "Attempting to copy plugin plugin asset files from '#{source}' to '#{Engines.public_directory}'"
 
-      source_files = Dir[source + "/**/*"]
-      source_dirs = source_files.select { |d| File.directory?(d) }
-      source_files -= source_dirs  
-      source_dirs.map! { |d| File.join(name, d.gsub(source, '')) }
-      source_files.map! { |f| File.join(name, f.gsub(source, '')) }
-  
-      logger.debug "source dirs: #{source_dirs.inspect}"
-      logger.debug "source files: #{source_files.inspect}"
-
-      # create all the directories, transforming the old path into the new path
-      source_dirs.uniq.each { |dir|
-        begin        
-          target_dir = File.join(Engines.public_directory, dir)
-          unless File.exist?(target_dir)
-            logger.debug "Creating directory '#{target_dir}'"
-            FileUtils.mkdir_p(target_dir)
-          end
-        rescue Exception => e
-          raise "Could not create directory #{target_dir}: \n" + e
-        end
-      }
-
-      source_files.uniq.each { |file|
-        begin
-          src = File.join(self.root, self.public_directory, file.gsub(self.name, ''))
-          target = File.join(Engines.public_directory, file)
-          unless File.exist?(target) && FileUtils.identical?(src, target)
-            logger.debug "copying file '#{src}' to '#{target}'"
-            FileUtils.cp(src, target)
-          end 
-        rescue Exception => e
-          raise "Could not copy #{file} to #{target}: \n" + e 
-        end
-      }
+      Engines.mirror_files_from(source, File.join(Engines.public_directory, name))
+      
     rescue Exception => e
       logger.warn "WARNING: Couldn't create the public file structure for plugin '#{name}'; Error follows:"
       logger.warn e

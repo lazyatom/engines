@@ -6,11 +6,15 @@ def logger
 end
 
 module ::Engines
-  # The name of the public directory to mirror public engine assets into
+  # The name of the public directory to mirror public engine assets into.
+  # Defaults to RAILS_ROOT/public/plugin_assets
   mattr_accessor :public_directory
+  self.public_directory = File.join(RAILS_ROOT, 'public', 'plugin_assets')
 
-  # The table in which to store plugin schema information
+  # The table in which to store plugin schema information. Defaults to
+  # "plugin_schema_info".
   mattr_accessor :schema_info_table
+  self.schema_info_table = "plugin_schema_info"
 
   # A reference to the current Rails::Initializer instance
   mattr_accessor :rails_initializer
@@ -22,14 +26,18 @@ module ::Engines
   
   # Set this to true if views should *only* be loaded from plugins
   mattr_accessor :disable_application_view_loading
+  self.disable_application_view_loading = false
   
   # Set this to true if controller/helper code shouldn't be loaded 
   # from the application
   mattr_accessor :disable_application_code_loading
+  self.disable_application_code_loading = false
   
   # Set this ti true if code should not be mixed (i.e. it will be loaded
   # from the first valid path on $LOAD_PATH)
   mattr_accessor :disable_code_mixing
+  self.disable_code_mixing = false
+  
   
   private
 
@@ -52,13 +60,8 @@ module ::Engines
     Rails.configuration = rails_configuration
 
     # We need a hook into this so we can get freaky with the plugin loading itself
-    self.rails_initializer = rails_initializer    
-
-    self.public_directory = default_public_directory
-    self.schema_info_table = default_schema_info_table
-    self.disable_application_view_loading = false
-    self.disable_application_code_loading = false
-    self.disable_code_mixing = false
+    self.rails_initializer = rails_initializer
+    
     @load_all_plugins = false    
     
     store_load_path_marker
@@ -87,31 +90,17 @@ module ::Engines
     @legacy_support
   end
 
-  # a reference to the currently-loaded plugin. This is present to support
+  # A reference to the currently-loading/loaded plugin. This is present to support
   # legacy engines; it's preferred to use Rails.plugins[name] in your plugin's
-  # init.rb file in order to get the Plugin instance.
+  # init.rb file in order to get your Plugin instance.
   def self.current
     Rails.plugins.last
   end
-
 
   # This is set to true if Engines detects a "*" at the end of
   # the config.plugins array.  
   def self.load_all_plugins?
     @load_all_plugins
-  end
-    
-
-  # TODO: how will this affect upgrades?
-  # could just get folks to manually rename the table. Or provide an upgrade
-  # migration...?
-  def self.default_schema_info_table
-    "plugin_schema_info"
-  end
-
-  # The default plugin assets directory, RAILS_ROOT/public/plugin_assets.
-  def self.default_public_directory
-    File.join(RAILS_ROOT, 'public', 'plugin_assets')
   end
 
   # Stores a record of the last path with Rails added to the load path.
@@ -206,5 +195,36 @@ should edit the files within the <engine_name>/public/ directory itself.}
   # Also appears in Rails::Initializer extensions
   def self.plugin_name(path)
     File.basename(path)
+  end
+  
+  
+  def self.mirror_files_from(source, destination)
+    return unless File.directory?(source)
+    
+    source_files = Dir[source + "/**/*"]
+    source_dirs = source_files.select { |d| File.directory?(d) }
+    source_files -= source_dirs  
+    
+    source_dirs.each do |dir|
+      # strip down these paths so we have simple, relative paths we can
+      # add to the destination
+      target_dir = File.join(destination, dir.gsub(source, ''))
+      begin        
+        FileUtils.mkdir_p(target_dir)
+      rescue Exception => e
+        raise "Could not create directory #{target_dir}: \n" + e
+      end
+    end
+
+    source_files.each do |file|
+      begin
+        target = File.join(destination, file.gsub(source, ''))
+        unless File.exist?(target) && FileUtils.identical?(file, target)
+          FileUtils.cp(file, target)
+        end 
+      rescue Exception => e
+        raise "Could not copy #{file} to #{target}: \n" + e 
+      end
+    end  
   end
 end
