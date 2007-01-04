@@ -20,5 +20,5 @@ Engines.init(config, self)
   require "engines/rails_extensions/#{f}"
 end
 
-# Load the testing extensions
-require "engines/testing"
+# Load the testing extensions, if we are in the test environment.
+require "engines/testing" if RAILS_ENV == "test"
