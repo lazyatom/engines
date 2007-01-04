@@ -154,7 +154,7 @@ should edit the files within the <engine_name>/public/ directory itself.}
   # we should load all other plugins once Rails has finished initializing, and
   # remove the "*"
   def self.check_for_star_wildcard
-    if Rails.configuration.plugins.last == "*"
+    if Rails.configuration.plugins && Rails.configuration.plugins.last == "*"
       Rails.configuration.plugins.pop
       @load_all_plugins = true
     end 
