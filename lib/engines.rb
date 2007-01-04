@@ -144,7 +144,7 @@ module ::Engines
 They are copied from the 'public' directories of each engine into this directory
 each time Rails starts (server, console... any time 'start_engine' is called).
 Any edits you make will NOT persist across the next server restart; instead you
-should edit the files within the <engine_name>/public/ directory itself.}
+should edit the files within the <plugin_name>/assets/ directory itself.}
       target = File.join(public_directory, "README")
       File.open(target, 'w') { |f| f.puts(message) } unless File.exist?(target)
     end

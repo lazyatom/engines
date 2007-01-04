@@ -18,6 +18,7 @@ All references to engines have been removed; For example, any rake tasks which a
 Layouts can now be shared via plugins - inspiration gratefully taken from PluginAWeek's plugin_routing :)
 Actual routing from plugins is now possible, by including routes.rb in your plugin directory and using the from_plugin method in config/routes.rb (Ticket #182)
 Controllers are no longer loaded twice if they're not present in the normal app/ directory (Ticket #177)
+The preferred location for javascripts/stylesheets/etc is now 'assets' rather than 'public'
 
 
 -----
