@@ -17,7 +17,7 @@ module Engines::RailsExtensions::Templates
       
         # Otherwise, check in the plugins to see if the template can be found there.
         # Load this in order so that more recently started plugins will take priority.
-        Rails.plugins.in_precidence_order.each do |plugin|
+        Rails.plugins.by_precedence do |plugin|
           plugin_specific_path = File.join(plugin.root, 'app', 'views',  
                                          template_path.to_s + '.' + extension.to_s)
           return plugin_specific_path if File.exist?(plugin_specific_path)
@@ -48,7 +48,7 @@ module Engines::RailsExtensions::Templates
 
     private
       def layout_list_with_engine_additions
-        plugin_layouts = Rails.plugins.in_precidence_order.map do |p| 
+        plugin_layouts = Rails.plugins.by_precedence.map do |p| 
           File.join(p.root,"app", "views", "layouts")
         end
         layout_list_without_engine_additions + Dir["{#{plugin_layouts.join(",")}}/**/*"]
@@ -71,7 +71,7 @@ module Engines::RailsExtensions::Templates
     private    
       # Returns all possible template paths for the current mailer
       def template_paths
-        paths = Rails.plugins.in_precidence_order.map { |p| "#{p.root}/app/views/#{mailer_name}" }
+        paths = Rails.plugins.by_precedence.map { |p| "#{p.root}/app/views/#{mailer_name}" }
         paths.unshift(template_path_without_engine_additions) unless Engines.disable_application_view_loading
         paths
       end

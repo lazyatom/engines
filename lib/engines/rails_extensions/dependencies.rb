@@ -18,7 +18,7 @@ module Engines::RailsExtensions::Dependencies
       if file_name =~ /^(.*app\/#{file_type}s\/)?(.*_#{file_type})(\.rb)?$/
         base_name = $2
         # ... go through the plugins from first started to last, so that
-        # code with a high precidence (started later) will override lower precidence
+        # code with a high precedence (started later) will override lower precedence
         # implementations
         Rails.plugins.each do |plugin|
           plugin_file_name = File.expand_path(File.join(plugin.root, 'app', "#{file_type}s", base_name))

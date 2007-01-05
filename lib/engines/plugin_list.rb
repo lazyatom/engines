@@ -9,7 +9,11 @@ class PluginList < Array
   end
   
   # Go through each plugin, highest priority first (last loaded first).
-  def in_precidence_order
-    reverse
+  def by_precedence(&block)
+    if block_given?
+      reverse.each { |x| yield x }
+    else 
+      reverse
+    end
   end
 end

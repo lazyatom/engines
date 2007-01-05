@@ -12,7 +12,7 @@ module Engines::Testing
   def self.setup_plugin_fixtures
     
     # Copy all plugin fixtures, and then the application fixtures, into this directory
-    Rails.plugins.in_precidence_order.each do |plugin| 
+    Rails.plugins.by_precedence do |plugin| 
       plugin_fixtures_directory =  File.join(plugin.root, "test", "fixtures")
       if File.directory?(plugin_fixtures_directory)
         Engines.mirror_files_from(plugin_fixtures_directory, self.temporary_fixtures_directory)
