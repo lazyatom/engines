@@ -81,12 +81,23 @@ class Plugin
       end
     end
     
-    # Add controllers to the Routing system specifically. TODO - is this needed?
+    # Add controllers to the Routing system specifically. We actually add our paths
+    # to the configuration too, since routing is started AFTER plugins are. Plugins
+    # which are loaded by engines specifically (i.e. because of the '*' in 
+    # config.plugins) will need their paths added directly to the routing system, 
+    # since at that point it has already been configured.
     plugin_controllers = File.join(root, 'app', 'controllers')
     plugin_components = File.join(root, 'components')
-    ActionController::Routing.controller_paths << plugin_controllers if File.directory?(plugin_controllers)
-    ActionController::Routing.controller_paths << plugin_components if File.directory?(plugin_components)
+    if File.directory?(plugin_controllers)
+      ActionController::Routing.controller_paths << plugin_controllers
+      Rails.configuration.controller_paths << plugin_controllers
+    end
+    if File.directory?(plugin_components)
+      ActionController::Routing.controller_paths << plugin_components 
+      Rails.configuration.controller_paths << plugin_components
+    end
     ActionController::Routing.controller_paths.uniq!
+    Rails.configuration.controller_paths.uniq!
   end
 
   # Replicates the subdirectories under the plugins's /public or /assets directory into
