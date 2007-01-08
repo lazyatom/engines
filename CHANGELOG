@@ -20,6 +20,8 @@ Actual routing from plugins is now possible, by including routes.rb in your plug
 Controllers are no longer loaded twice if they're not present in the normal app/ directory (Ticket #177)
 The preferred location for javascripts/stylesheets/etc is now 'assets' rather than 'public'
 Ensure that plugins started before routing have their controllers appropriately added to config.controller_paths (Ticket #258)
+Removed Engines.version - it's not longer relevant, now we're loading version information from about.yml files.
+Added a huge amount of documentation to all new modules.
 
 
 -----

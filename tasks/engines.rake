@@ -45,8 +45,8 @@ namespace :doc do
         options << '--line-numbers' << '--inline-source'
         options << '-T html'
 
-        files.include("#{plugin_base}/lib/**/*.rb")
-        files.include("#{plugin_base}/app/**/*.rb") # this is the only addition!
+        #files.include("#{plugin_base}/lib/**/*.rb")
+        files.include("#{plugin_base}/**/*.rb") # this is the only addition!
         if File.exists?("#{plugin_base}/README")
           files.include("#{plugin_base}/README")    
           options << "--main '#{plugin_base}/README'"

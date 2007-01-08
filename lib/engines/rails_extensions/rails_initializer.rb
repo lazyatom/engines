@@ -1,8 +1,22 @@
 require "engines/rails_extensions/rails"
 require 'engines/plugin_list'
 
+# The engines plugin changes the way that Rails actually loads other plugins.
+# It creates instances of the Plugin class to represent each plugin, stored
+# in the <tt>Rails.plugins</tt> PluginList.
+#
+# ---
+#
+# Three methods from the original Rails::Initializer module are overridden
+# by Engines::RailsExtensions::RailsInitializer:
+#
+# [+load_plugin+] which now creates Plugin instances and calls Plugin#load
+# [+after_initialize+] which now performs Engines.after_initialize in addition
+#                      to the given config block
+# [+plugin_enabled?+]  which now respects Engines.load_all_plugins?
+#
 module Engines::RailsExtensions::RailsInitializer
-  def self.included(base)
+  def self.included(base) #:nodoc:
     base.class_eval do
       alias_method_chain :load_plugin, :engine_additions
       alias_method_chain :after_initialize, :engine_additions
@@ -18,7 +32,7 @@ module Engines::RailsExtensions::RailsInitializer
   end
   
   # Loads a plugin, performing the extra load path/public file magic of
-  # engines.
+  # engines by calling Plugin#load.
   def load_plugin_with_engine_additions(directory)
     name = plugin_name(directory)
     return false if loaded_plugins.include?(name)
@@ -42,7 +56,8 @@ module Engines::RailsExtensions::RailsInitializer
   end
   
   # Allow the engines plugin to do whatever it needs to do after Rails has
-  # loaded, and then call the actual after_initialize block.
+  # loaded, and then call the actual after_initialize block. Currently, this
+  # is call Engines.after_initialize.
   def after_initialize_with_engine_additions
     Engines.after_initialize
     after_initialize_without_engine_additions
@@ -50,10 +65,14 @@ module Engines::RailsExtensions::RailsInitializer
   
   protected
   
+    # Returns true if the plugin at the given path should be loaded; false
+    # otherwise. If Engines.load_all_plugins? is true, this method will return
+    # true regardless of the path given.
     def plugin_enabled_with_engine_additions?(path)
       Engines.load_all_plugins? || plugin_enabled_without_engine_additions?(path)
     end
         
+    # Returns the name of the plugin at the given path.
     def plugin_name(path)
       File.basename(path)
     end    

@@ -1,4 +1,26 @@
-class ::Module
+# This file contains support for the now-deprecated +config+ method that the engines
+# plugin provided before version 1.2. Instead of using this, plugin authors are
+# now encouraged to create their own module configuration mechanisms; the 
+# +mattr_accessor+ mechanism provided by ActiveSupport is ideal for this:
+#
+#  module MyPlugin
+#    mattr_accessor :config_value
+#    self.config_value = "default"
+#  end
+#
+# == Using the deprecated config method
+#
+# If you require the config method to be present, change your +environment.rb+
+# file such that the very top of the file looks like this:
+#
+#   require File.join(File.dirname(__FILE__), 'boot')
+#   require File.join(RAILS_ROOT, "vendor", "plugins", "engines",
+#                     "lib", "engines", "deprecated_config_support")
+#
+
+
+# Adds the +config+ and +default_constant+ methods to Module.
+class Module
   # Defines a constant within a module/class ONLY if that constant does
   # not already exist.
   #

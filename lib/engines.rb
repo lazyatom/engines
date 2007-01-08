@@ -1,13 +1,78 @@
+# This file contains the Engines module, which holds most of the logic regarding
+# the startup and management of plugins. See Engines for more details.
+#
+# The engines plugin adds to Rails' existing behaviour by producing the +Rails.plugins+
+# PluginList, a list of all loaded plugins in a form which can be easily queried
+# and manipulated. Each instance of Plugin has methods which are used to enhance
+# their behaviour, including mirroring public assets, add controllers, helpers
+# and views and even migration.
+#
+# = init.rb
+# 
+# When the engines plugin loads, it first includes the 
+# Engines::RailsExtensions::RailsInitializer module into Rails::Initializer,
+# overriding a number of the methods used to load plugins.
+#
+# Once this is loaded, Engines.init is called to prepare the application
+# and create the relevant new datastructures (including +Rails.plugins+).
+#
+# Finally, each of the extension modules from Engines::RailsExtensionsis 
+# loaded and included into the relevant Rails classes and modules, enhancing 
+# their behaviour to work better with files from plugins.
+
 require "engines/plugin_list"
 require "engines/plugin"
 
+# TODO: define a better logger.
 def logger
   RAILS_DEFAULT_LOGGER
 end
 
-module ::Engines
+# The Engines module contains most of the methods used during the enhanced
+# startup of Rails plugins.
+#
+# When the Engines plugin loads (its <tt>init.rb</tt> file is evaluated), the
+# Engines.init method is called. This kickstarts the plugins hooks into 
+# the initialization process.
+#
+# == Parameters
+#
+# The Engines module has a number of public configuration parameters:
+#
+# [+public_directory+]  The directory into which plugin assets should be
+#                       mirrored. Defaults to <tt>RAILS_ROOT/public/plugin_assets</tt>.
+# [+schema_info_table+] The table to use when storing plugin migration 
+#                       version information. Defaults to +plugin_schema_info+.
+# [+rails_initializer+] A reference of the Rails initializer instance that
+#                       was used to startup Rails. This is often useful
+#                       when working with the startup process; see
+#                       Engines::RailsExtensions::RailsInitializer for more
+#                       information
+#
+# Additionally, there are a few flags which control the behaviour of
+# some of the features the engines plugin adds to Rails:
+#
+# [+disable_application_view_loading+] A boolean flag determining whether
+#                                      or not views should be loaded from 
+#                                      the main <tt>app/views</tt> directory.
+#                                      Defaults to false; probably only 
+#                                      useful when testing your plugin.
+# [+disable_application_code_loading+] A boolean flag determining whether
+#                                      or not to load controllers/helpers 
+#                                      from the main +app+ directory,
+#                                      if corresponding code exists within 
+#                                      a plugin. Defaults to false; again, 
+#                                      probably only useful when testing 
+#                                      your plugin.
+# [+disable_code_mixing+] A boolean flag indicating whether all plugin
+#                         copies of a particular controller/helper should 
+#                         be loaded and allowed to override each other, 
+#                         or if the first matching file should be loaded 
+#                         instead. Defaults to false.
+#
+module Engines
   # The name of the public directory to mirror public engine assets into.
-  # Defaults to RAILS_ROOT/public/plugin_assets
+  # Defaults to <tt>RAILS_ROOT/public/plugin_assets</tt>.
   mattr_accessor :public_directory
   self.public_directory = File.join(RAILS_ROOT, 'public', 'plugin_assets')
 
@@ -47,11 +112,19 @@ module ::Engines
   mattr_accessor :rails_final_dependency_load_path
   
   public
-    
-  def self.version
-    "#{Version::Major}.#{Version::Minor}.#{Version::Release}"
-  end  
-    
+  
+  # Initializes the engines plugin and prepares Rails to start loading
+  # plugins using engines extensions. Within this method:
+  #
+  # 1. Copies of the Rails configuration and initializer are stored;
+  # 2. The Rails.plugins PluginList instance is created;
+  # 3. Any plugins which were loaded before the engines plugin are given 
+  #    the engines treatment via #enginize_previously_loaded_plugins.
+  # 4. The base public directory (into which plugin assets are mirrored)
+  #    is created, if necessary - #initialize_base_public_directory
+  # 5. <tt>config.plugins</tt> is checked to see if a wildcard was present -
+  #    #check_for_star_wildcard
+  #
   def self.init(rails_configuration, rails_initializer)
     # First, determine if we're running in legacy mode
     @legacy_support = self.const_defined?(:LegacySupport) && LegacySupport
@@ -77,7 +150,6 @@ module ::Engines
     logger.debug "engines has started."
   end
 
-  # Whether or not to load legacy 'engines' (with init_engine.rb) as if they were plugins
   # You can enable legacy support by defining the LegacySupport constant
   # in the Engines module before Rails loads, i.e. at the *top* of environment.rb,
   # add:
@@ -86,6 +158,8 @@ module ::Engines
   #     LegacySupport = true
   #   end
   #
+  # Legacy Support doesn't actually do anything at the moment. If necessary
+  # we may support older-style 'engines' using this flag.
   def self.legacy_support?
     @legacy_support
   end
@@ -97,7 +171,7 @@ module ::Engines
     Rails.plugins.last
   end
 
-  # This is set to true if Engines detects a "*" at the end of
+  # This is set to true if a "*" widlcard is present at the end of
   # the config.plugins array.  
   def self.load_all_plugins?
     @load_all_plugins
@@ -119,7 +193,10 @@ module ::Engines
     logger.debug "Rails final dependency load path: #{self.rails_final_dependency_load_path}"
   end
   
-  # Create Plugin instances for plugins loaded before Engines
+  # Create Plugin instances for plugins loaded before the engines plugin was.
+  # Once a Plugin instance is created, the Plugin#load method is then called
+  # to fully load the plugin. See Plugin#load for more details about how a
+  # plugin is started once engines is involved.
   def self.enginize_previously_loaded_plugins
     Engines.rails_initializer.loaded_plugins.each do |name|
       plugin_path = File.join(self.find_plugin_path(name), name)
@@ -134,7 +211,8 @@ module ::Engines
   end  
   
   # Ensure that the plugin asset subdirectory of RAILS_ROOT/public exists, and
-  # that we've added a little warning message.
+  # that we've added a little warning message to instruct developers not to mess with
+  # the files inside, since they're automatically generated.
   def self.initialize_base_public_directory
     if !File.exist?(self.public_directory)
       # create the public/engines directory, with a warning message in it.
@@ -152,7 +230,7 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
   
   # Check for a "*" at the end of the plugins list; if one is found, note that
   # we should load all other plugins once Rails has finished initializing, and
-  # remove the "*"
+  # remove the "*".
   def self.check_for_star_wildcard
     if Rails.configuration.plugins && Rails.configuration.plugins.last == "*"
       Rails.configuration.plugins.pop
@@ -186,18 +264,23 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
   # helper methods to find and deal with plugin paths and names
   #+
   
+  # Returns the path within +Rails.configuration.plugin_paths+ which includes
+  # a plugin with the given name.
   def self.find_plugin_path(name)
     Rails.configuration.plugin_paths.find do |path|
       File.exist?(File.join(path, name.to_s))
     end    
   end
   
-  # Also appears in Rails::Initializer extensions
+  # Returns the name for the plugin at the given path.
+  # (Note this method also appears in Rails::Initializer extensions)
   def self.plugin_name(path)
     File.basename(path)
   end
   
-  
+  # A general purpose method to mirror a directory (+source+) into a destination
+  # directory, including all files and subdirectories. Files will not be mirrored
+  # if they are identical already (checked via FileUtils#identical?).
   def self.mirror_files_from(source, destination)
     return unless File.directory?(source)
     

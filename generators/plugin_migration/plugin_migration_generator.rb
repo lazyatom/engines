@@ -1,3 +1,5 @@
+# Generates a migration which migrates all plugins to their latest versions
+# within the database.
 class PluginMigrationGenerator < Rails::Generator::Base
   
   def initialize(runtime_args, runtime_options={})
@@ -24,13 +26,15 @@ class PluginMigrationGenerator < Rails::Generator::Base
   
   protected
   
+    # Create the plugin schema table if it doesn't already exist. See
+    # Engines::RailsExtensions::Migrations#initialize_schema_information_with_engine_additions
     def ensure_plugin_schema_table_exists
       ActiveRecord::Base.connection.initialize_schema_information
     end
-  
+
+    # Determine all the plugins which have migrations that aren't present
+    # according to the plugin schema information from the database.
     def get_plugins_to_migrate(plugin_names)
-      
-      #puts "plugin_names: #{plugin_names.inspect}"
       
       # First, grab all the plugins which exist and have migrations
       @plugins_to_migrate = if plugin_names.empty?
@@ -40,8 +44,6 @@ class PluginMigrationGenerator < Rails::Generator::Base
           Rails.plugins[name] ? Rails.plugins[name] : raise("Cannot find the plugin '#{name}'")
         end
       end
-      
-      #puts "plugin_to_migate: #{@plugins_to_migrate.inspect}"
       
       @plugins_to_migrate.reject! { |p| p.latest_migration.nil? }
       
@@ -67,6 +69,8 @@ class PluginMigrationGenerator < Rails::Generator::Base
       @options[:assigns][:current_versions] = @current_versions
     end
 
+    # Construct a unique migration name based on the plugins involved and the
+    # versions they should reach after this migration is run.
     def build_migration_name
       @plugins_to_migrate.map do |plugin| 
         "#{plugin.name}_to_version_#{@new_versions[plugin.name]}" 
