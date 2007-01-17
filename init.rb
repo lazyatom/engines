@@ -1,3 +1,10 @@
+begin
+  require 'rails/version'
+  unless Rails::VERSION::MAJOR >= 1 && RAILS::VERSION::MINOR >= 2
+    raise "This version of the engines plugin requires Rails 1.2 or later!"
+  end
+end
+
 # First, require the engines module & core methods
 require "engines"
 
