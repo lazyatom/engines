@@ -1,30 +1,56 @@
-Upgrading from Engines 1.1.x to Engines 1.2
-===========================================
+Upgrading from Engines 1.1.x to Engines 1.2.x
+=============================================
 
-Changes
--------
+The 1.2 release of the engines plugin represents a significant rewrite of the internals. Now less intrusive into the core frameworks, it's even simpler for plugin developers to make more flexible plugins than Rails typically allows.
 
-* change the engine_schema table to plugin_schema
-* rename RAILS_ROOT/public/engine_files to RAILS_ROOT/public/plugin_assets
-* engine_image, engine_stylesheet and engine_javascript are gone, replaced with image_tag "blah", :plugin => "name" and so on.
+However, as a consequence of change, you may need to perform some adjustments to your application to get the most benefit. These are outlined below:
 
 
+In your application
+-------------------
+
+1. Change the engine_schema table to plugin_schema
+
+   Because the engines plugin now works universally for any Rails plugin, the table used to store migration information has been renamed appropriately. We can also play nicely with other plugin_migration implementations by supporting this convention.
+
+2. Rename RAILS_ROOT/public/engine_files to RAILS_ROOT/public/plugin_assets
+
+   Similarly, any plugin can now share stylesheets, images and so on via an assets folder, so the destination within the main public directory has been renamed to reflect this.
+
+3. The engine_image, engine_stylesheet and engine_javascript helpers have been replaced with enhanced versions of the normal Rails asset helpers
+
+   Now, it's simple to include an image from any plugin:
+
+     image_tag "image.png", :plugin => "my_plugin"
+
+   A similar convention exists for stylesheets and javascript files.
+
+4. Engines.start is no longer required
+
+   Rails' native configuration object includes an array for specifying which plugins are loaded, and in what order. The engines plugin enhances this feature with a "*" wildcard, so that you can load any order-sensitive plugins, and then the rest in any order.
+
+     config.plugins = ["engines", "some_plugin", "another_plugin", "*"]
+  
+   It's worth noting that the engines plugin no longer needs to be specifically loaded first, so most people can happily ignore the config.plugins array without any problems.
 
 
-Dropped Features
-----------------
 
-fixture method
-'smart' engine versions - we no longer do fancy stuff with modules, etc
-the magic 'config' module, in preference of mattr_accessor :attribute
+In your "engine"-style plugins
+------------------------------
 
+* init_engine.rb is no longer required
 
-
-
-Todo
-----
+  Please now create init.rb files, just as normal plugins
 
 
-when testing multiple plugins, it's possible that view mixing/code mixing will cause
-functionality to bleed between plugins
-- possible add a new test:plugins which tests each one, having only it load?
+* The "fixture" method for loading tests from arbitrary files
+
+  Supporting this was just too difficult, and it seems like the combination of Rails' lack of enhancements regarding this feature, along with the mind-shift against static fixtures, meant that it simply was too much work to continue to support.
+
+  The only reason this mechanism even had to exist was to support plugins which couldn't predict the names of the tables that models might be stored in. This is now a discouraged behaviour.
+
+* Engines.current.version
+
+  The engines plugin used to provide a simple way to store version information about plugins. This has now been superceded by including that information in an about.yml file, which any plugin can use.
+
+
