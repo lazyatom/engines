@@ -18,6 +18,7 @@ For more details about changes in Engines 1.2, please see the changelog or:
 end_of_warning
 else
   puts <<-end_of_message
+  
 The engines plugin is now installed. Feels good, right? Yeah. You knew it would.
 
 Once the warm, fuzzy glow has subsided, be sure to read the contents of the README
