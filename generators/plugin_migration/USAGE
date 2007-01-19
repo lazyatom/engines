@@ -7,7 +7,7 @@ Description:
   
   This is important because the set of application migrations remains an
   accurate record of the state of the database, even as plugins are installed
-  and removed during the development process
+  and removed during the development process.
 
 Example:
   ./script/generate plugin_migration [<plugin_name> <another_plugin_name> ...]
@@ -19,7 +19,7 @@ Example:
           |-migrate
               |- xxx_plugin_migrations.rb
 
-  which contains the migrations for the given plugin(s)
+  which contains the migrations for the given plugin(s).
   
   
 Advanced Usage:
