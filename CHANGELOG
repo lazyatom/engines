@@ -23,6 +23,7 @@ Ensure that plugins started before routing have their controllers appropriately 
 Removed Engines.version - it's not longer relevant, now we're loading version information from about.yml files.
 Added a huge amount of documentation to all new modules.
 Added new warning message if installation of engines 1.2.x is attempted in a Rails 1.1.x application
+Added details of the removal of the config method to UPGRADING
 
 
 -----
