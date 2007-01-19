@@ -3,7 +3,7 @@ begin
   $LOAD_PATH.unshift File.join(File.dirname(__FILE__), "..", "..", "rails", "railties", "lib")
   silence_warnings { require 'rails/version' }
 
-  if Rails::VERSION::MAJOR < 1 && Rails::VERSION::MINOR < 2
+  unless Rails::VERSION::MAJOR >= 1 && Rails::VERSION::MINOR >= 2
     puts <<-end_of_warning
 !!!=== IMPORTANT NOTE ===!!!
 Support for Rails < 1.2 has been dropped; if you are using Rails =< 1.1.6, 
