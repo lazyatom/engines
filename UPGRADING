@@ -45,9 +45,9 @@ In your "engine"-style plugins
 
 * The "fixture" method for loading tests from arbitrary files
 
-  Supporting this was just too difficult, and it seems like the combination of Rails' lack of enhancements regarding this feature, along with the mind-shift against static fixtures, meant that it simply was too much work to continue to support.
+  Supporting this was just too difficult, and it seems like the combination of Rails' own lack of enhancements regarding this feature, along with the mind-shift against static fixtures, meant that it simply was too much work to continue to support.
 
-  The only reason this mechanism even had to exist was to support plugins which couldn't predict the names of the tables that models might be stored in. This is now a discouraged behaviour.
+  The only reason this mechanism originally existed was to support plugins which couldn't predict the names of the tables that models might be stored in. This is now a discouraged behaviour.
 
 * Engines.current.version
 
