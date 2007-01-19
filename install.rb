@@ -1,7 +1,6 @@
 begin
 
-  $LOAD_PATH.unshift File.join("..", "..", "rails", "railties", "lib")
-  require 'rails/version'
+  silence_warnings { require 'rails/version' }
 
   if Rails::VERSION::MAJOR < 1 && Rails::VERSION::MINOR < 2
     puts <<-end_of_warning
@@ -20,5 +19,5 @@ end
 puts <<-end_of_message
 Thanks for download the engines plugin. If you're upgrading to the 1.2.x 
 branch of releases of this plugin, please ensure that you read and understand
-the contents of the UPGRADING file.'
+the instructions in README and UPGRADING.'
 end_of_message
