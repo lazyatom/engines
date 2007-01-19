@@ -1,5 +1,6 @@
 begin
 
+  $LOAD_PATH.unshift File.join(File.dirname(__FILE__), "..", "..", "rails", "railties", "lib")
   silence_warnings { require 'rails/version' }
 
   if Rails::VERSION::MAJOR < 1 && Rails::VERSION::MINOR < 2
