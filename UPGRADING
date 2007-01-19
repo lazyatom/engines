@@ -40,7 +40,22 @@ In your application
 5. The "config" method is no longer loaded by default. 
 
   See below.
+  
+  
+6. Any "engines" type rake tasks are now "plugin" tasks:
 
+  The following rake tasks are now provided by the engines plugin for operating on your application's plugins (whenever a task can operate on a single plugin, this can be controlled by specifying PLUGIN=<name> on the commandline):
+  
+    plugins:info              # plugin names and versions (if available) for everything installed
+    
+    db:fixtures:plugins:load  # load fixtures from plugins. 
+    
+    test:plugins:units        # Run tests from within <plugins>/test/units
+    test:plugins:functional   # Run tests from within <plugins>/test/functional
+    test:plugins:integration  # Run tests from within <plugins>/test/integration
+    test:plugins:all          # Run all tests from within <plugins>/test/*
+
+    doc:plugins:
 
 
 In your "engine"-style plugins
