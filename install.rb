@@ -18,8 +18,11 @@ For more details about changes in Engines 1.2, please see the changelog or:
 end_of_warning
 else
   puts <<-end_of_message
-Thanks for download the engines plugin. If you're upgrading to the 1.2.x 
-branch of releases of this plugin, please ensure that you read and understand
-the instructions in README and UPGRADING.'
+The engines plugin is now installed. Feels good, right? Yeah. You knew it would.
+
+Once the warm, fuzzy glow has subsided, be sure to read the contents of the README
+and UPGRADING files if you're migrating this application from Rails 1.1.x to 1.2.x.
+
+Have a great day!
 end_of_message
 end
