@@ -119,7 +119,7 @@ module Engines
   # 1. Copies of the Rails configuration and initializer are stored;
   # 2. The Rails.plugins PluginList instance is created;
   # 3. Any plugins which were loaded before the engines plugin are given 
-  #    the engines treatment via #enginize_previously_loaded_plugins.
+  #    the engines treatment via #enhance_loaded_plugins.
   # 4. The base public directory (into which plugin assets are mirrored)
   #    is created, if necessary - #initialize_base_public_directory
   # 5. <tt>config.plugins</tt> is checked to see if a wildcard was present -
@@ -141,7 +141,7 @@ module Engines
     store_dependency_load_path_marker
     
     Rails.plugins ||= PluginList.new
-    enginize_previously_loaded_plugins # including this one, as it happens.
+    enhance_loaded_plugins # including this one, as it happens.
 
     initialize_base_public_directory
     
@@ -197,7 +197,7 @@ module Engines
   # Once a Plugin instance is created, the Plugin#load method is then called
   # to fully load the plugin. See Plugin#load for more details about how a
   # plugin is started once engines is involved.
-  def self.enginize_previously_loaded_plugins
+  def self.enhance_loaded_plugins
     Engines.rails_initializer.loaded_plugins.each do |name|
       plugin_path = File.join(self.find_plugin_path(name), name)
       unless Rails.plugins[name]
