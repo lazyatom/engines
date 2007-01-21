@@ -1,11 +1,3 @@
-namespace :plugins do
-  desc "Display version information about active engines"
-  task :info => :environment do
-    plugins = ENV["PLUGIN"] ? [Rails.plugins[ENV["PLUGINS"]]] : Rails.plugins
-    plugins.each { |p|  puts "#{p.name}: #{p.version}" }
-  end
-end
-
 namespace :db do  
   namespace :fixtures do
     namespace :plugins do

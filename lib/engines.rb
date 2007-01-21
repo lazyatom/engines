@@ -247,18 +247,31 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
   # Once the Rails Initializer has finished, the engines plugin takes over
   # and performs any post-processing tasks it may have, including:
   #
-  # * loading any remaining plugins if config.plugins ended with a '*'
-  # * ... nothing else right now.
+  # * Loading any remaining plugins if config.plugins ended with a '*'.
+  # * Updating Rails::Info with version information, if possible.
   #
   def self.after_initialize
-     if self.load_all_plugins?
+    if self.load_all_plugins?
       logger.debug "loading remaining plugins from #{Rails.configuration.plugin_paths.inspect}"
       # this will actually try to load ALL plugins again, but any that have already 
       # been loaded will be ignored.
       rails_initializer.load_all_plugins
+      update_rails_info_with_loaded_plugins
     end
-  end  
+  end
   
+  # Updates Rails::Info with the list of loaded plugins, and version information for
+  # each plugin. This information is then available via script/about, or through
+  # the builtin rails_info controller.
+  def self.update_rails_info_with_loaded_plugins
+    if defined?(Rails::Info) # since it may not be available by default in some environments... 
+                             # don't do anything if it's not there.
+      Rails::Info.property("Loaded plugins") { Rails.plugins.map { |p| p.name }.join(", ") }
+      Rails.plugins.each do |plugin|
+        Rails::Info.property("#{plugin.name} version") { plugin.version.blank? ? "(unknown)" : plugin.version }
+      end
+    end      
+  end
   
   #-
   # helper methods to find and deal with plugin paths and names

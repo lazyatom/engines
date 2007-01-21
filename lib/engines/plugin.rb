@@ -105,8 +105,10 @@ class Plugin
   # directory (#mirror_public_assets).
   def load
     logger.debug "Plugin '#{name}': starting load."
+    
     inject_into_load_path
     mirror_public_assets
+    
     logger.debug "Plugin '#{name}': loaded."
   end
   

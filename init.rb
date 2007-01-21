@@ -29,3 +29,12 @@ end
 
 # Load the testing extensions, if we are in the test environment.
 require "engines/testing" if RAILS_ENV == "test"
+
+# Load the Rails::Info module so that plugins can insert information into it.
+begin
+  require 'rails/info'
+rescue Exception
+  # If this file can't be loaded, it's probably because we're running in an
+  # environment where Rails' builtins aren't yet in the load path.
+  # For the moment, just ignore this. See Ticket #261
+end
