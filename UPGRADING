@@ -85,3 +85,7 @@ In your "engine"-style plugins
     require File.join(RAILS_ROOT, "vendor", "plugins", "engines",
                       "lib", "engines", "deprecated_config_support")
 
+
+* Public assets should now be stored in a subdirectory of your plugin called "assets", rather than "public".
+
+  This clarifies the nature of this directory; it is not made public itself, but rather is a container for files which should be made accessible from the web.
