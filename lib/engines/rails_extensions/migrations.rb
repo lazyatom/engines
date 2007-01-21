@@ -75,7 +75,7 @@ require "engines/plugin_migrator"
 #
 # == Upgrading plugins
 #
-# It might happen that later in an appliation's life, we update to a new version of
+# It might happen that later in an application's life, we update to a new version of
 # the tagging plugin which requires some changes to our database. The tagging plugin
 # provides these changes in the form of its own migrations. 
 #
@@ -112,7 +112,7 @@ require "engines/plugin_migrator"
 # Simply get the Plugin instance, and its Plugin#migrate method with the version
 # you wish to end up at:
 #
-#   Rails.plugins[:whatever].migrate(<i>version</i>)
+#   Rails.plugins[:whatever].migrate(version)
 #
 # ---
 #

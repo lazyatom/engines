@@ -9,7 +9,7 @@
 #
 # == Example
 #
-# A plugin contains the following controller in <tt>plugin/app/controllers/my_controller.rb:
+# A plugin contains the following controller in <tt>plugin/app/controllers/my_controller.rb</tt>:
 #
 #   class MyController < ApplicationController
 #     def index
@@ -23,7 +23,7 @@
 # In one application that uses this plugin, we decide that the name used in the
 # index action should be "Robbie", not "HAL 9000". To override this single method,
 # we create the corresponding controller in our application 
-# (<tt>RAILS_ROOT/app/controllers/my_controller.rb</tt>), and redfine the method:
+# (<tt>RAILS_ROOT/app/controllers/my_controller.rb</tt>), and redefine the method:
 #
 #   class MyController < ApplicationController
 #     def index
