@@ -17,7 +17,11 @@ class Engines::PluginMigrator < ActiveRecord::Migrator
     self.current_plugin = plugin
     migrate(plugin.migration_directory, version)
   end
-    
+  
+  # Returns the name of the table used to store schema information about
+  # installed plugins.
+  #
+  # See Engines.schema_info_table for more details.
   def self.schema_info_table_name
     ActiveRecord::Base.wrapped_table_name Engines.schema_info_table
   end
@@ -43,6 +47,8 @@ class Engines::PluginMigrator < ActiveRecord::Migrator
     end
   end
 
+  # Sets the version of the plugin in Engines::PluginMigrator.current_plugin to
+  # the given version.
   def set_schema_version(version)
     ActiveRecord::Base.connection.update(<<-ESQL
       UPDATE #{self.class.schema_info_table_name} 

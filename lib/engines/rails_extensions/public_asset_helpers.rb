@@ -3,17 +3,17 @@
 # your javascripts, stylesheets and images in subdirectories of that folder:
 #
 #   my_plugin
-#     +- init.rb
-#     +- lib/
-#     +- assets/
+#     |- init.rb
+#     |- lib/
+#     |- assets/
 #          |- javascripts/
-#          |    +- my_functions.js
+#          |    |- my_functions.js
 #          |
 #          |- stylesheets/
-#          |    +- my_styles.css
+#          |    |- my_styles.css
 #          |
 #          |- images/
-#               +- my_face.jpg
+#               |- my_face.jpg
 #
 # Files within the <tt>asset</tt> structure are automatically mirrored into
 # a publicly-accessible folder each time your application starts (see
@@ -54,7 +54,7 @@
 # which can be used to specify the originating plugin for any assets.
 #
 module Engines::RailsExtensions::PublicAssetHelpers
-  def self.included(base)
+  def self.included(base) #:nodoc:
     base.class_eval do
       [:stylesheet_link_tag, :javascript_include_tag, :image_path, :image_tag].each do |m|
         alias_method_chain m, :engine_additions
@@ -62,10 +62,12 @@ module Engines::RailsExtensions::PublicAssetHelpers
     end
   end
   
+  # Adds plugin functionality to Rails' default stylesheet_link_tag method.
   def stylesheet_link_tag_with_engine_additions(*sources)
     stylesheet_link_tag_without_engine_additions(*Engines::RailsExtensions::PublicAssetHelpers.pluginify_sources("stylesheets", *sources))
   end
-  
+
+  # Adds plugin functionality to Rails' default javascript_include_tag method.  
   def javascript_include_tag_with_engine_additions(*sources)
     javascript_include_tag_without_engine_additions(*Engines::RailsExtensions::PublicAssetHelpers.pluginify_sources("javascripts", *sources))
   end
@@ -74,12 +76,14 @@ module Engines::RailsExtensions::PublicAssetHelpers
   # Our modified image_path now takes a 'plugin' option, though it doesn't require it
   #++
   
+  # Adds plugin functionality to Rails' default image_path method.
   def image_path_with_engine_additions(source, options={})
     options.stringify_keys!
     source = Engines::RailsExtensions::PublicAssetHelpers.plugin_asset_path(options["plugin"], "images", source) if options["plugin"]
     image_path_without_engine_additions(source)
   end
   
+  # Adds plugin functionality to Rails' default image_tag method.
   def image_tag_with_engine_additions(source, options={})
     options.stringify_keys!
     if options["plugin"]

@@ -1,3 +1,7 @@
+# Contains the enhancements to Rails' migrations system to support the 
+# Engines::PluginMigrator. See Engines::RailsExtensions::Migrations for more
+# information.
+
 require "engines/plugin_migrator"
 
 # = Plugins and Migrations: Background

@@ -47,7 +47,8 @@
 #     map.connect ":controller/:action/:id"
 #   end
 # 
-# By including routes in plugins which have controllers, you can now share in a simple way a compact and elegant URL scheme which corresponds to those controllers.
+# By including routes in plugins which have controllers, you can now share in a simple way 
+# a compact and elegant URL scheme which corresponds to those controllers.
 #
 # ---
 #
@@ -55,8 +56,8 @@
 # routing (ActionController::Routing) mechanism such that routes can be loaded 
 # from a given plugin.
 #
-# The key method is #from_plugin, which can be called within your application's
-# <tt>config/routes.rb</tt> file to load plugin routes at that point.
+# The key method is Engines::RailsExtensions::Routing#from_plugin, which can be called 
+# within your application's <tt>config/routes.rb</tt> file to load plugin routes at that point.
 #
 module Engines::RailsExtensions::Routing
   # Loads the set of routes from within a plugin and evaluates them at this

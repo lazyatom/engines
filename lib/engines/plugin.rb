@@ -15,7 +15,7 @@
 # Plugin developers can also access the contents of their <tt>about.yml</tt> files
 # via Plugin#about, which returns a Hash if the <tt>about.yml</tt> file exists for
 # this plugin. Note that if <tt>about.yml</tt> contains a "version" key, it will 
-# automatically be loaded into #version.
+# automatically be loaded into the <tt>version</tt> attribute described above.
 #
 # If this plugin contains paths in directories other than <tt>app/controllers</tt>,
 # <tt>app/helpers</tt>, <tt>app/models</tt> and <tt>components</tt>, authors can

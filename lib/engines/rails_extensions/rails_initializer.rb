@@ -1,3 +1,7 @@
+# Enhances the Rails::Initializer class to be a bit smarter about
+# plugins. See Engines::RailsExtensions::RailsInitializer for more
+# details.
+
 require "engines/rails_extensions/rails"
 require 'engines/plugin_list'
 
@@ -13,7 +17,8 @@ require 'engines/plugin_list'
 # [+load_plugin+] which now creates Plugin instances and calls Plugin#load
 # [+after_initialize+] which now performs Engines.after_initialize in addition
 #                      to the given config block
-# [+plugin_enabled?+]  which now respects Engines.load_all_plugins?
+# [<tt>plugin_enabled?</tt>]  which now respects the result of 
+#                             Engines.load_all_plugins?
 #
 module Engines::RailsExtensions::RailsInitializer
   def self.included(base) #:nodoc:

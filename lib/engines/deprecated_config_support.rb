@@ -1,6 +1,6 @@
 # This file contains support for the now-deprecated +config+ method that the engines
 # plugin provided before version 1.2. Instead of using this, plugin authors are
-# now encouraged to create their own module configuration mechanisms; the 
+# now encouraged to create their own Module configuration mechanisms; the 
 # +mattr_accessor+ mechanism provided by ActiveSupport is ideal for this:
 #
 #  module MyPlugin
@@ -20,6 +20,10 @@
 
 
 # Adds the +config+ and +default_constant+ methods to Module.
+#
+# *IMPORTANT NOTE* - these methods are deprecated. Only use them when you have no
+# other choice. See link:files/lib/engines/deprecated_config_support_rb.html for more
+# information.
 class Module
   # Defines a constant within a module/class ONLY if that constant does
   # not already exist.
