@@ -17,7 +17,7 @@ Because the engines plugin now works universally for any Rails plugin, the table
 
 === Rename RAILS_ROOT/public/engine_files to RAILS_ROOT/public/plugin_assets
 
-Similarly, any plugin can now share stylesheets, images and so on via an assets folder, so the destination within the main public directory has been renamed to reflect this.
+Similarly, any plugin can now share stylesheets, images and so on via an assets folder, so the destination within the main public directory has been renamed to reflect this. You can simply delete the RAILS_ROOT/public/engine_files directory; the new one will be generated the next time your application starts.
 
 
 === The engine_image, engine_stylesheet and engine_javascript helpers have been replaced with enhanced versions of the normal Rails asset helpers
@@ -31,7 +31,7 @@ A similar convention exists for stylesheets and javascript files.
 
 === Engines.start is no longer required
 
-Rails' native configuration object includes an array for specifying which plugins are loaded, and in what order. The engines plugin enhances this feature with a "*" wildcard, so that you can load any order-sensitive plugins, and then the rest in any order.
+Rails' native configuration object now includes an array for specifying which plugins are loaded, and in what order. The engines plugin enhances this feature with a "*" wildcard, so that you can load any order-sensitive plugins, and then the rest in any order.
 
   config.plugins = ["engines", "some_plugin", "another_plugin", "*"]
   
@@ -68,29 +68,29 @@ If you have developed or are using plugins that leverage engines enhancements, y
 
 === init_engine.rb is no longer required
 
-  Please now create init.rb files, just as normal plugins
+Please now create init.rb files, just as you'd find in "normal" plugins. Remember - there's no such thing as "an engine" anymore.
 
 
 === The "fixture" method for loading tests from arbitrary files
 
-  Supporting this was just too difficult, and it seems like the combination of Rails' own lack of enhancements regarding this feature, along with the mind-shift against static fixtures, meant that it simply was too much work to continue to support.
+Supporting this was just too difficult, and it seems like the combination of Rails' own lack of enhancements regarding this feature, along with the mind-shift against static fixtures, meant that it simply was too much work to continue to support.
 
-  The only reason this mechanism originally existed was to support plugins which couldn't predict the names of the tables that models might be stored in. This is now a discouraged behaviour.
+The only reason this mechanism originally existed was to support plugins which couldn't predict the names of the tables that models might be stored in. This is now a discouraged behaviour.
 
 
 === Engines.current.version has changed its behaviour slightly.
 
-  The engines plugin used to provide a simple way to store version information about plugins. This has now been superceded by including that information in an about.yml file, which any plugin can use.
+The engines plugin used to provide a simple way to store version information about plugins. This has now been superceded by including that information in an about.yml file, which any plugin can use.
 
 
 === The "config" method is not included, by default.
 
-  Where previously developers could use the "config" method to define configuration, this is now deprecated in favour of using mattr_accessor directly in the Module. However, if you still *need* to use the config method, it is included but must be explicitly required, probably near the top of environment.rb:
+Where previously developers could use the "config" method to define configuration, this is now deprecated in favour of using mattr_accessor directly in the Module. However, if you still *need* to use the config method, it is included but must be explicitly required, probably near the top of environment.rb:
   
-    require File.join(RAILS_ROOT, "vendor", "plugins", "engines",
-                      "lib", "engines", "deprecated_config_support")
+  require File.join(RAILS_ROOT, "vendor", "plugins", "engines",
+                    "lib", "engines", "deprecated_config_support")
 
 
 === Public assets should now be stored in a subdirectory of your plugin called "assets", rather than "public".
 
-  This clarifies the nature of this directory; it is not made public itself, but rather is a container for files which should be made accessible from the web.
+This clarifies the nature of this directory; it is not made public itself, but rather is a container for files which should be made accessible from the web.

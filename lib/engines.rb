@@ -14,7 +14,7 @@
 # overriding a number of the methods used to load plugins.
 #
 # Once this is loaded, Engines.init is called to prepare the application
-# and create the relevant new datastructures (including +Rails.plugins+).
+# and create the relevant new datastructures (including <tt>Rails.plugins</tt>).
 #
 # Finally, each of the extension modules from Engines::RailsExtensionsis 
 # loaded and included into the relevant Rails classes and modules, enhancing 

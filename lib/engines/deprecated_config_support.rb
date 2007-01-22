@@ -10,7 +10,7 @@
 #
 # == Using the deprecated config method
 #
-# If you require the config method to be present, change your +environment.rb+
+# If you require the config method to be present, change your <tt>environment.rb</tt>
 # file such that the very top of the file looks like this:
 #
 #   require File.join(File.dirname(__FILE__), 'boot')
