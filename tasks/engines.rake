@@ -25,33 +25,44 @@ namespace :doc do
   plugins = FileList['vendor/plugins/**'].collect { |plugin| File.basename(plugin) }
 
   namespace :plugins do
-    # Define doc tasks for each plugin
-    plugins.each do |plugin|
-      desc "Create plugin documentation for '#{plugin}'"
-      task(plugin => :environment) do
-        plugin_base   = "vendor/plugins/#{plugin}"
-        options       = []
-        files         = Rake::FileList.new
-        options << "-o doc/plugins/#{plugin}"
-        options << "--title '#{plugin.titlecase} Plugin Documentation'"
-        options << '--line-numbers' << '--inline-source'
-        options << '-T html'
 
-        #files.include("#{plugin_base}/lib/**/*.rb")
-        files.include("#{plugin_base}/**/*.rb") # this is the only addition!
-        if File.exists?("#{plugin_base}/README")
-          files.include("#{plugin_base}/README")    
-          options << "--main '#{plugin_base}/README'"
+    desc "Generate full documentation for all installed plugins"
+    task :full => plugins.collect { |plugin| "doc:plugins:full:#{plugin}" }
+    
+    # documentation, including the app directory and any other source files 
+    namespace :full do
+      # Define doc tasks for each plugin
+      plugins.each do |plugin|
+        desc "Create plugin documentation for '#{plugin}'"
+        task(plugin => :environment) do
+          plugin_base   = RAILS_ROOT + "/vendor/plugins/#{plugin}"
+          options       = []
+          files         = Rake::FileList.new
+          options << "-o doc/plugins/#{plugin}"
+          options << "--title '#{plugin.titlecase} Plugin Documentation'"
+          options << '--line-numbers' << '--inline-source'
+          options << '-T html'
+
+          files.include("#{plugin_base}/{lib,app}/**/*.rb") # this is the only addition!
+          if File.exists?("#{plugin_base}/README")
+            files.include("#{plugin_base}/README")    
+            options << "--main '#{plugin_base}/README'"
+          end
+          files.include("#{plugin_base}/CHANGELOG") if File.exists?("#{plugin_base}/CHANGELOG")
+
+          if files.empty?
+            puts "No source files found in #{plugin_base}. No documentation will be generated."
+          else
+            options << files.to_s
+            sh %(rdoc #{options * ' '})
+          end
         end
-        files.include("#{plugin_base}/CHANGELOG") if File.exists?("#{plugin_base}/CHANGELOG")
-
-        options << files.to_s
-
-        sh %(rdoc #{options * ' '})
       end
     end
   end
 end
+
+
 
 namespace :test do
   task :warn_about_multiple_plugin_testing_with_engines do
