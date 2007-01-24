@@ -22,11 +22,11 @@ Similarly, any plugin can now share stylesheets, images and so on via an assets 
 
 === The engine_image, engine_stylesheet and engine_javascript helpers have been replaced with enhanced versions of the normal Rails asset helpers
 
-Now, it's simple to include an image from any plugin:
+Now, it's simple to include an image from any plugin, by adding a plugin key to the helper's options hash:
 
   image_tag "image.png", :plugin => "my_plugin"
 
-A similar convention exists for stylesheets and javascript files.
+A similar convention exists for stylesheets and javascript files. Additionally, the old behaviour of automatically including assets which match the "engine"'s name has been dropped - only the files you explicitly request are included.
 
 
 === Engines.start is no longer required
