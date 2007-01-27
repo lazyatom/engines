@@ -3,7 +3,7 @@
 
 The 1.2 release of the engines plugin represents a significant rewrite of the internals. Now less intrusive into the core frameworks, it's even simpler for plugin developers to make more flexible plugins than Rails typically allows.
 
-However, as a consequence of change, you may need to perform some adjustments to your application to get the most benefit. These are outlined below:
+However, as a consequence of change, you may need to make some adjustments to your application to get the most benefit. These are outlined below:
 
 
 == In your application
@@ -29,7 +29,7 @@ Now, it's simple to include an image from any plugin, by adding a plugin key to 
 A similar convention exists for stylesheets and javascript files. Additionally, the old behaviour of automatically including assets which match the "engine"'s name has been dropped - only the files you explicitly request are included.
 
 
-=== Engines.start is no longer required
+=== Engines.start is replaced with config.plugins
 
 Rails' native configuration object now includes an array for specifying which plugins are loaded, and in what order. The engines plugin enhances this feature with a "*" wildcard, so that you can load any order-sensitive plugins, and then the rest in any order.
 
@@ -38,7 +38,7 @@ Rails' native configuration object now includes an array for specifying which pl
 It's worth noting that the engines plugin no longer needs to be specifically loaded first, so most people can happily ignore the config.plugins array without any problems.
 
 
-=== The "config" method is no longer loaded by default. 
+=== The "config" method for "engine"-style configuration is no longer loaded by default. 
 
 See below.
   
