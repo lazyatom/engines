@@ -51,3 +51,12 @@ Migrations record the changes in your database as your application evolves. With
   script/generate plugin_migration
   
 This will produce a migration in your application. Running this migration (via <tt>rake db:migrate</tt>, as normal) will migrate the database according to the latest migrations in each plugin. See Engines::RailsExtensions::Migrations for more information.
+
+
+=== More powerful Rake tasks
+
+The engines plugin enhances and adds to the suite of default rake tasks for working with plugins. The <tt>doc:plugins</tt> task now includes controllers, helpers and models under <tt>app</tt>, and anything other code found under the plugin's <tt>code_paths</tt> attribute. New testing tasks have been added to run unit, functional and integration tests from plugins, whilst making it easier to load fixtures from plugins. See Engines::Testing for more details about testing, and run
+
+  rake -T
+  
+to see the set of rake tasks available.

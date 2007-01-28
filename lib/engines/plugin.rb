@@ -67,7 +67,10 @@ class Plugin
     # The default set of code paths which will be added to $LOAD_PATH
     # and Dependencies.load_paths
     def default_code_paths
-      %w(app/controllers app/helpers app/models components)
+      # lib will actually be removed from the load paths when we call
+      # uniq! in #inject_into_load_paths, but it's important to keep it
+      # around (for the documentation tasks, for instance).
+      %w(app/controllers app/helpers app/models components lib)
     end
     
     # The default set of code paths which will be added to the routing system

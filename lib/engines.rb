@@ -292,6 +292,8 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
   def self.mirror_files_from(source, destination)
     return unless File.directory?(source)
     
+    # TODO: use Rake::FileList#pathmap?
+    
     source_files = Dir[source + "/**/*"]
     source_dirs = source_files.select { |d| File.directory?(d) }
     source_files -= source_dirs  

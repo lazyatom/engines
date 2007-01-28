@@ -45,6 +45,8 @@
 
 * Removed the plugins:info rake task in favour of adding information to script/about via the Rails::Info module (Ticket #261)
 
+* Improved handling of testing and documentation tasks for plugins
+
 
 
 = 1.1.4

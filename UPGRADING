@@ -52,10 +52,10 @@ The following rake tasks are now provided by the engines plugin for operating on
   test:plugins:units        # Run tests from within <plugins>/test/units
   test:plugins:functional   # Run tests from within <plugins>/test/functional
   test:plugins:integration  # Run tests from within <plugins>/test/integration
-  test:plugins:all          # Run all tests from within <plugins>/test/*
+  test:plugins              # Run all tests from within <plugins>/test/*
 
-  doc:plugins:full          # Run full rdoc against all source files within all plugins
-  doc:plugins:full:<plugin> # Run full rdoc against all source files within the given plugin
+  doc:plugins               # Run full rdoc against all source files within all plugins
+  doc:plugins:<plugin>      # Run full rdoc against all source files within the given plugin
 
 
 

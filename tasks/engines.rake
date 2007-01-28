@@ -1,3 +1,34 @@
+# This code lets us redefine existing Rake tasks, which is extermely
+# handy for modifying existing Rails rake tasks.
+# Credit for this snippet of code goes to Jeremy Kemper
+# http://pastie.caboo.se/9620
+unless Rake::TaskManager.methods.include?(:redefine_task)
+  module Rake
+    module TaskManager
+      def redefine_task(task_class, args, &block)
+        task_name, deps = resolve_args(args)
+        task_name = task_class.scope_name(@scope, task_name)
+        deps = [deps] unless deps.respond_to?(:to_ary)
+        deps = deps.collect {|d| d.to_s }
+        task = @tasks[task_name.to_s] = task_class.new(task_name, self)
+        task.application = self
+        task.add_comment(@last_comment)
+        @last_comment = nil
+        task.enhance(deps, &block)
+        task
+      end
+    end
+    class Task
+      class << self
+        def redefine_task(args, &block)
+          Rake.application.redefine_task(self, args, &block)
+        end
+      end
+    end
+  end
+end
+
+
 namespace :db do  
   namespace :fixtures do
     namespace :plugins do
@@ -16,46 +47,41 @@ namespace :db do
   end
 end
 
-
-# this is just a rip-off from the plugin stuff in railties/lib/tasks/documentation.rake, 
-# because the default plugindoc stuff doesn't support subdirectories like <plugin>/app or
-# <plugin>/component.
+# this is just a modification of the original task in railties/lib/tasks/documentation.rake, 
+# because the default task doesn't support subdirectories like <plugin>/app or
+# <plugin>/component. These tasks now include every file under a plugin's code paths (see
+# Plugin#code_paths).
 namespace :doc do
 
   plugins = FileList['vendor/plugins/**'].collect { |plugin| File.basename(plugin) }
 
   namespace :plugins do
 
-    desc "Generate full documentation for all installed plugins"
-    task :full => plugins.collect { |plugin| "doc:plugins:full:#{plugin}" }
-    
-    # documentation, including the app directory and any other source files 
-    namespace :full do
-      # Define doc tasks for each plugin
-      plugins.each do |plugin|
-        desc "Create plugin documentation for '#{plugin}'"
-        task(plugin => :environment) do
-          plugin_base   = RAILS_ROOT + "/vendor/plugins/#{plugin}"
-          options       = []
-          files         = Rake::FileList.new
-          options << "-o doc/plugins/#{plugin}"
-          options << "--title '#{plugin.titlecase} Plugin Documentation'"
-          options << '--line-numbers' << '--inline-source'
-          options << '-T html'
+    # Define doc tasks for each plugin
+    plugins.each do |plugin|
+      desc "Create plugin documentation for '#{plugin}'"
+      Rake::Task.redefine_task(plugin => :environment) do
+        plugin_base   = RAILS_ROOT + "/vendor/plugins/#{plugin}"
+        options       = []
+        files         = Rake::FileList.new
+        options << "-o doc/plugins/#{plugin}"
+        options << "--title '#{plugin.titlecase} Plugin Documentation'"
+        options << '--line-numbers' << '--inline-source'
+        options << '-T html'
 
-          files.include("#{plugin_base}/{lib,app}/**/*.rb") # this is the only addition!
-          if File.exists?("#{plugin_base}/README")
-            files.include("#{plugin_base}/README")    
-            options << "--main '#{plugin_base}/README'"
-          end
-          files.include("#{plugin_base}/CHANGELOG") if File.exists?("#{plugin_base}/CHANGELOG")
+        # Include every file in the plugin's code_paths (see Plugin#code_paths)
+        files.include("#{plugin_base}/{#{Rails.plugins[plugin].code_paths.join(",")}}/**/*.rb")
+        if File.exists?("#{plugin_base}/README")
+          files.include("#{plugin_base}/README")    
+          options << "--main '#{plugin_base}/README'"
+        end
+        files.include("#{plugin_base}/CHANGELOG") if File.exists?("#{plugin_base}/CHANGELOG")
 
-          if files.empty?
-            puts "No source files found in #{plugin_base}. No documentation will be generated."
-          else
-            options << files.to_s
-            sh %(rdoc #{options * ' '})
-          end
+        if files.empty?
+          puts "No source files found in #{plugin_base}. No documentation will be generated."
+        else
+          options << files.to_s
+          sh %(rdoc #{options * ' '})
         end
       end
     end
@@ -114,5 +140,8 @@ Report any issues on http://dev.rails-engines.org. Thanks!
     task :setup_plugin_fixtures => :environment do
       Engines::Testing.setup_plugin_fixtures
     end
+    
+    # Patch the default plugin testing task to have setup_plugin_fixtures as a prerequisite
+    Rake::Task["test:plugins"].prerequisites << "test:plugins:setup_plugin_fixtures"
   end  
 end
