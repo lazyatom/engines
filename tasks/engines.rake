@@ -79,6 +79,7 @@ or use the per-type plugin test tasks:
   $ rake test:plugins:units
   $ rake test:plugins:functionals
   $ rake test:plugins:integration
+  $ rake test:plugins:all
 
 Report any issues on http://dev.rails-engines.org. Thanks!
 
@@ -86,6 +87,11 @@ Report any issues on http://dev.rails-engines.org. Thanks!
   end
   
   namespace :plugins do
+
+    desc "Run the plugin tests in vendor/plugins/**/test (or specify with PLUGIN=name)"
+    task :all => [:warn_about_multiple_plugin_testing_with_engines, 
+                  :units, :functionals, :integration]
+    
     desc "Run all plugin unit tests"
     Rake::TestTask.new(:units => :setup_plugin_fixtures) do |t|
       t.pattern = "vendor/plugins/#{ENV['PLUGIN'] || "**"}/test/unit/**/*_test.rb"
@@ -104,12 +110,8 @@ Report any issues on http://dev.rails-engines.org. Thanks!
       t.verbose = true
     end
 
-    desc "Run the plugin tests in vendor/plugins/**/test (or specify with PLUGIN=name)"
-    task :all => [:warn_about_multiple_plugin_testing_with_engines, 
-                  :units, :functionals, :integration]
-    
-    task :setup_plugin_fixtures => "db:test:prepare" do
-      # mirror all fixtures into a temporary but known directory
+    desc "Mirrors plugin fixtures into a single location to help plugin tests"
+    task :setup_plugin_fixtures => :environment do
       Engines::Testing.setup_plugin_fixtures
     end
   end  
