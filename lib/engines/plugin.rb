@@ -44,11 +44,15 @@ class Plugin
   #   plugin.code_paths << 'app/other_classes'
   #
   # Defaults to ["app/controllers", "app/helpers", "app/models", "components"]
-  # (see #default_code_paths).
+  # (see #default_code_paths). NOTE: if you want to set this, you must
+  # ensure that the engines plugin is loaded before any plugins which
+  # reference this since it's not available before the engines plugin has worked
+  # its magic.
   attr_accessor :code_paths
   
   # Plugins can add paths to this attribute in init.rb if they need
-  # controllers loaded from additional locations. See also #default_controller_paths
+  # controllers loaded from additional locations. See also #default_controller_paths, and
+  # the caveat surrounding the #code_paths accessor.
   attr_accessor :controller_paths
   
   # The directory in this plugin to mirror into the shared directory
