@@ -44,8 +44,12 @@ class Plugin
   #   plugin.code_paths << 'app/other_classes'
   #
   # Defaults to ["app/controllers", "app/helpers", "app/models", "components"]
-  # (see default_code_paths).
+  # (see #default_code_paths).
   attr_accessor :code_paths
+  
+  # Plugins can add paths to this attribute in init.rb if they need
+  # controllers loaded from additional locations. See also #default_controller_paths
+  attr_accessor :controller_paths
   
   # The directory in this plugin to mirror into the shared directory
   # under +public+. See Engines.initialize_base_public_directory
@@ -60,6 +64,11 @@ class Plugin
     # and Dependencies.load_paths
     def default_code_paths
       %w(app/controllers app/helpers app/models components)
+    end
+    
+    # The default set of code paths which will be added to the routing system
+    def default_controller_paths
+      %w(app/controllers components)
     end
 
     # Attempts to detect the directory to use for public files.
@@ -77,6 +86,7 @@ class Plugin
     @root = path
     
     @code_paths = default_code_paths
+    @controller_paths = default_controller_paths
     @public_directory = default_public_directory
     
     load_about_information
@@ -120,19 +130,17 @@ class Plugin
   # * <tt>ActionController::Routing.controller_paths</tt>
   #
   def inject_into_load_path
+
+    load_path_index = $LOAD_PATH.index(Engines.rails_final_load_path)
+    dependency_index = ::Dependencies.load_paths.index(Engines.rails_final_dependency_load_path)
     
     # Add relevant paths under the engine root to the load path
     code_paths.map { |p| File.join(root, p) }.each do |path| 
       if File.directory?(path)
         # Add to the load paths
-        index = $LOAD_PATH.index(Engines.rails_final_load_path)
-        $LOAD_PATH.insert(index + 1, path)
-        $LOAD_PATH.uniq!
-
+        $LOAD_PATH.insert(load_path_index + 1, path)
         # Add to the dependency system, for autoloading.
-        index = ::Dependencies.load_paths.index(Engines.rails_final_dependency_load_path)
-        ::Dependencies.load_paths.insert(index + 1, path)
-        ::Dependencies.load_paths.uniq!
+        ::Dependencies.load_paths.insert(dependency_index + 1, path)
       end
     end
     
@@ -141,16 +149,15 @@ class Plugin
     # which are loaded by engines specifically (i.e. because of the '*' in 
     # +config.plugins+) will need their paths added directly to the routing system, 
     # since at that point it has already been configured.
-    plugin_controllers = File.join(root, 'app', 'controllers')
-    plugin_components = File.join(root, 'components')
-    if File.directory?(plugin_controllers)
-      ActionController::Routing.controller_paths << plugin_controllers
-      Rails.configuration.controller_paths << plugin_controllers
+    controller_paths.map { |p| File.join(root, p) }.each do |path|
+      if File.directory?(path)
+        ActionController::Routing.controller_paths << path
+        Rails.configuration.controller_paths << path
+      end
     end
-    if File.directory?(plugin_components)
-      ActionController::Routing.controller_paths << plugin_components 
-      Rails.configuration.controller_paths << plugin_components
-    end
+
+    $LOAD_PATH.uniq!
+    ::Dependencies.load_paths.uniq!
     ActionController::Routing.controller_paths.uniq!
     Rails.configuration.controller_paths.uniq!
   end

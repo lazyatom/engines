@@ -137,8 +137,7 @@ module Engines
     
     @load_all_plugins = false    
     
-    store_load_path_marker
-    store_dependency_load_path_marker
+    store_load_path_markers
     
     Rails.plugins ||= PluginList.new
     enhance_loaded_plugins # including this one, as it happens.
@@ -177,18 +176,14 @@ module Engines
     @load_all_plugins
   end
 
-  # Stores a record of the last path with Rails added to the load path.
+  # Stores a record of the last paths which Rails added to each of the load path
+  # attributes ($LOAD_PATH, Dependencies.load_paths and 
+  # ActionController::Routing.controller_paths) that influence how code is loaded
   # We need this to ensure that we place our additions to the load path *after*
   # all Rails' defaults
-  def self.store_load_path_marker
+  def self.store_load_path_markers
     self.rails_final_load_path = $LOAD_PATH.last
     logger.debug "Rails final load path: #{self.rails_final_load_path}"
-  end
-
-  # Store a record of the last entry in the dependency system's load path.
-  # We need this to ensure that we place our additions to the load path *after*
-  # all Rails' defaults
-  def self.store_dependency_load_path_marker
     self.rails_final_dependency_load_path = ::Dependencies.load_paths.last
     logger.debug "Rails final dependency load path: #{self.rails_final_dependency_load_path}"
   end
