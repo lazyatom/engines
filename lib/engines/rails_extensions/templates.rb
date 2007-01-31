@@ -99,7 +99,6 @@ module Engines::RailsExtensions::Templates
       base.class_eval do
         alias_method_chain :template_path, :engine_additions
         alias_method_chain :render, :engine_additions
-        #alias_method_chain :render_message, :engine_additions
       end
     end
 
@@ -119,18 +118,11 @@ module Engines::RailsExtensions::Templates
       def template_path_with_engine_additions
         "{#{template_paths.join(",")}}"
       end
-
-      # TODO: is this needed? It seems redundant now.
-      # Set the base_path for the ActionView::Base renderer to the correct path for the
-      # given template
-      # def render_message_with_engine_additions(method_name, body)
-      #   render_message_without_engine_additions(method_name, body)
-      # end
       
       # We've broken this up so that we can dynamically alter the base_path that ActionView
       # is rendering from so that templates can be located from plugins.
       def render_with_engine_additions(opts)
-        template_path_for_method = Dir["#{template_path}/#{opts[:file]}.*"].first
+        template_path_for_method = Dir["#{template_path}/#{opts[:file]}*"].first
         body = opts.delete(:body)
         i = initialize_template_class(body)
         i.base_path = File.dirname(template_path_for_method)
@@ -142,4 +134,7 @@ end
 
 ::ActionView::Base.send(:include, Engines::RailsExtensions::Templates::ActionView)
 ::ActionController::Layout::ClassMethods.send(:include, Engines::RailsExtensions::Templates::Layout)
-::ActionMailer::Base.send(:include, Engines::RailsExtensions::Templates::MailTemplates)
+
+if Object.const_defined?(:ActionMailer) # We don't need to do this if ActionMailer hasn't been loaded.
+  ::ActionMailer::Base.send(:include, Engines::RailsExtensions::Templates::MailTemplates)
+end
