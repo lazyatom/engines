@@ -2,7 +2,6 @@
 # for more details.
 
 require 'test/unit'
-require 'test_help'
 
 require 'tmpdir'
 require 'fileutils'
