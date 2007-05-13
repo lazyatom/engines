@@ -1,4 +1,4 @@
-# This code lets us redefine existing Rake tasks, which is extermely
+# This code lets us redefine existing Rake tasks, which is extremely
 # handy for modifying existing Rails rake tasks.
 # Credit for this snippet of code goes to Jeremy Kemper
 # http://pastie.caboo.se/9620
