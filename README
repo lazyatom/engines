@@ -30,6 +30,8 @@ Include these files in an <tt>app</tt> directory just like you would in a normal
 
 Model code can similarly be placed in an <tt>app/models/</tt> directory. Unfortunately, it's not possible to automatically override methods within a model; if your application needs to change the way a model behaves, consider creating a subclass, or replacing the model entirely within your application's <tt>app/models/</tt> directory. See Engines::RailsExtensions::Dependencies for more information.
 
+IMPORTANT NOTE: when you load code from within plugins, it is typically not handled well by Rails in terms of unloading and reloading changes. Look here for more information - http://rails-engines.org/development/common-issues-when-overloading-code-from-plugins/
+
 === Routes
 
 Include your route declarations in a <tt>routes.rb</tt> file at the root of your plugins, e.g.:
