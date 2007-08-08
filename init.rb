@@ -1,43 +1,40 @@
-#--
-# Copyright (c) 2006 James Adam
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to
-# the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-#
-#
-# = IN OTHER WORDS:
-#
-# You are free to use this software as you please, but if it breaks you'd
-# best not come a'cryin...
-#++
-
-# Load the engines & bundles extensions
-require 'engines'
-require 'bundles'
-
-module ::Engines::Version
-  Major = 1 # change implies compatibility breaking with previous versions
-  Minor = 2 # change implies backwards-compatible change to API
-  Release = 0 # incremented with bug-fixes, updates, etc.
+begin
+  silence_warnings { require 'rails/version' } # it may already be loaded
+  unless Rails::VERSION::MAJOR >= 1 && Rails::VERSION::MINOR >= 2
+    raise "This version of the engines plugin requires Rails 1.2 or later!"
+  end
 end
 
-# Keep a hold of the Rails Configuration object, which we can *only* access
-# when this file is evaluated.
-Engines.rails_config = config
+# First, require the engines module & core methods
+require "engines"
+
+# Load this before we get actually start engines
+require "engines/rails_extensions/rails_initializer"
+
+# Start the engines mechanism.
+Engines.init(config, self)
+
+# Now that we've defined the engines module, load up any extensions
+[:rails,
+ :rails_initializer,
+ :dependencies,
+ :active_record,
+ :migrations,
+ :templates,
+ :public_asset_helpers,
+ :routing
+].each do |f|
+  require "engines/rails_extensions/#{f}"
+end
+
+# Load the testing extensions, if we are in the test environment.
+require "engines/testing" if RAILS_ENV == "test"
+
+# Load the Rails::Info module so that plugins can insert information into it.
+begin
+  require 'rails/info'
+rescue Exception
+  # If this file can't be loaded, it's probably because we're running in an
+  # environment where Rails' builtins aren't yet in the load path.
+  # For the moment, just ignore this. See Ticket #261
+end
