@@ -98,10 +98,17 @@ module Engines
   mattr_accessor :disable_application_code_loading
   self.disable_application_code_loading = false
   
-  # Set this ti true if code should not be mixed (i.e. it will be loaded
+  # Set this to true if code should not be mixed (i.e. it will be loaded
   # from the first valid path on $LOAD_PATH)
   mattr_accessor :disable_code_mixing
   self.disable_code_mixing = false
+  
+  # This is used to determine which files are candidates for the "code
+  # mixing" feature that the engines plugin provides, where classes from
+  # plugins can be loaded, and then code from the application loaded
+  # on top of that code to override certain methods.
+  mattr_accessor :code_mixing_file_types
+  self.code_mixing_file_types = %w(controller helper)
   
   
   private
@@ -146,7 +153,7 @@ module Engines
     
     check_for_star_wildcard
     
-    logger.debug "engines has started."
+    logger.debug ">> Engines has started."
   end
 
   # You can enable legacy support by defining the LegacySupport constant
@@ -161,6 +168,38 @@ module Engines
   # we may support older-style 'engines' using this flag.
   def self.legacy_support?
     @legacy_support
+  end
+  
+  # The engines plugin will, by default, mix code from controllers and helpers,
+  # allowing application code to override specific methods in the corresponding
+  # controller or helper classes and modules. However, if other file types should
+  # also be mixed like this, they can be added by calling this method. For example,
+  # if you want to include "things" within your plugin and override them from
+  # your applications, you should use the following layout:
+  #
+  #   app/
+  #    +-- things/
+  #    |       +-- one_thing.rb
+  #    |       +-- another_thing.rb
+  #   ...
+  #   vendor/
+  #       +-- plugins/
+  #                +-- my_plugin/
+  #                           +-- app/
+  #                                +-- things/
+  #                                        +-- one_thing.rb
+  #                                        +-- another_thing.rb
+  #
+  # The important point here is that your "things" are named <whatever>_thing.rb,
+  # and that they are placed within plugin/app/things (the pluralized form of 'thing').
+  # 
+  # It's important to note that you'll also want to ensure that the "things" are
+  # on your load path in your plugin's init.rb:
+  #
+  #   Rails.plugins[:my_plugin].code_paths << "app/things"
+  #
+  def self.mix_code_from(*types)
+    self.code_mixing_file_types += types.map { |x| x.to_s.singularize }
   end
 
   # A reference to the currently-loading/loaded plugin. This is present to support
@@ -183,9 +222,9 @@ module Engines
   # all Rails' defaults
   def self.store_load_path_markers
     self.rails_final_load_path = $LOAD_PATH.last
-    logger.debug "Rails final load path: #{self.rails_final_load_path}"
+    logger.debug ">> Rails final load path: #{self.rails_final_load_path}"
     self.rails_final_dependency_load_path = ::Dependencies.load_paths.last
-    logger.debug "Rails final dependency load path: #{self.rails_final_dependency_load_path}"
+    logger.debug ">> Rails final dependency load path: #{self.rails_final_dependency_load_path}"
   end
   
   # Create Plugin instances for plugins loaded before the engines plugin was.
@@ -197,12 +236,12 @@ module Engines
       plugin_path = File.join(self.find_plugin_path(name), name)
       unless Rails.plugins[name]
         plugin = Plugin.new(name, plugin_path)
-        logger.debug "enginizing plugin: #{plugin.name} from #{plugin_path}"
+        logger.debug ">> Enginizing plugin: #{plugin.name} from #{plugin_path}"
         plugin.load # injects the extra directories into the load path, and mirrors public files
         Rails.plugins << plugin
       end
     end
-    logger.debug "plugins is now: #{Rails.plugins.map { |p| p.name }.join(", ")}"
+    logger.debug ">> Plugins now loaded: #{Rails.plugins.map { |p| p.name }.join(", ")}"
   end  
   
   # Ensure that the plugin asset subdirectory of RAILS_ROOT/public exists, and
@@ -211,7 +250,7 @@ module Engines
   def self.initialize_base_public_directory
     if !File.exist?(self.public_directory)
       # create the public/engines directory, with a warning message in it.
-      logger.debug "Creating public engine files directory '#{self.public_directory}'"
+      logger.debug ">> Creating public engine files directory '#{self.public_directory}'"
       FileUtils.mkdir(self.public_directory)
       message = %{Files in this directory are automatically generated from your Rails Engines.
 They are copied from the 'public' directories of each engine into this directory
@@ -247,7 +286,7 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
   #
   def self.after_initialize
     if self.load_all_plugins?
-      logger.debug "loading remaining plugins from #{Rails.configuration.plugin_paths.inspect}"
+      logger.debug ">> Loading remaining plugins from #{Rails.configuration.plugin_paths.inspect}"
       # this will actually try to load ALL plugins again, but any that have already 
       # been loaded will be ignored.
       rails_initializer.load_all_plugins
