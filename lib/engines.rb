@@ -4,6 +4,7 @@ require File.join(File.dirname(__FILE__), 'engines/plugin/list')
 require File.join(File.dirname(__FILE__), 'engines/plugin/loader')
 require File.join(File.dirname(__FILE__), 'engines/plugin/locator')
 require File.join(File.dirname(__FILE__), 'engines/assets')
+require File.join(File.dirname(__FILE__), 'engines/rails_ext/rails')
 
 # == Parameters
 #
@@ -72,6 +73,13 @@ module Engines
   mattr_accessor :disable_code_mixing
   self.disable_code_mixing = false
   
+  # This is used to determine which files are candidates for the "code
+  # mixing" feature that the engines plugin provides, where classes from
+  # plugins can be loaded, and then code from the application loaded
+  # on top of that code to override certain methods.
+  mattr_accessor :code_mixing_file_types
+  self.code_mixing_file_types = %w(controller helper)
+  
   class << self
     def init
       load_extensions
@@ -87,5 +95,37 @@ module Engines
     def select_existing_paths(paths)
       paths.select { |path| File.directory?(path) }
     end  
+  
+    # The engines plugin will, by default, mix code from controllers and helpers,
+    # allowing application code to override specific methods in the corresponding
+    # controller or helper classes and modules. However, if other file types should
+    # also be mixed like this, they can be added by calling this method. For example,
+    # if you want to include "things" within your plugin and override them from
+    # your applications, you should use the following layout:
+    #
+    #   app/
+    #    +-- things/
+    #    |       +-- one_thing.rb
+    #    |       +-- another_thing.rb
+    #   ...
+    #   vendor/
+    #       +-- plugins/
+    #                +-- my_plugin/
+    #                           +-- app/
+    #                                +-- things/
+    #                                        +-- one_thing.rb
+    #                                        +-- another_thing.rb
+    #
+    # The important point here is that your "things" are named <whatever>_thing.rb,
+    # and that they are placed within plugin/app/things (the pluralized form of 'thing').
+    # 
+    # It's important to note that you'll also want to ensure that the "things" are
+    # on your load path in your plugin's init.rb:
+    #
+    #   Rails.plugins[:my_plugin].code_paths << "app/things"
+    #
+    def mix_code_from(*types)
+      self.code_mixing_file_types += types.map { |x| x.to_s.singularize }
+    end
   end  
 end

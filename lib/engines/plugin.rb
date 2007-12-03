@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'core_ext/module')
-
 # An instance of Plugin is created for each plugin loaded by Rails, and
 # stored in the <tt>Engines.plugins</tt> PluginList 
 # (see Engines::RailsExt::RailsInitializer for more details).
@@ -21,20 +19,48 @@ module Engines
     #   plugin.code_paths << 'app/other_classes'
     #
     # Defaults to ["app/controllers", "app/helpers", "app/models", "components"]
-    default_attr_accessor :code_paths, %w(app/controllers app/helpers app/models components lib)
-  
+    attr_accessor :code_paths
+
     # Plugins can add paths to this attribute in init.rb if they need
     # controllers loaded from additional locations. 
-    default_attr_accessor :controller_paths, %w(app/controllers components)
+    attr_accessor :controller_paths
   
     # The directory in this plugin to mirror into the shared directory
-    # under +public+. 
+    # under +public+.
     #
-    # Default: if +assets+ exists in the plugin, this will be used. If +assets+ 
-    # is missing but +public+ is found, +public+ will be used.
-    default_attr_accessor :public_directory, :default_public_directory    
-    def default_public_directory
-      Engines.select_existing_paths(%w(assets public).map { |p| File.join(directory, p) }).first
+    # Defaults to "assets" (see default_public_directory).
+    attr_accessor :public_directory   
+    
+    protected
+  
+      # The default set of code paths which will be added to $LOAD_PATH
+      # and Dependencies.load_paths
+      def default_code_paths
+        # lib will actually be removed from the load paths when we call
+        # uniq! in #inject_into_load_paths, but it's important to keep it
+        # around (for the documentation tasks, for instance).
+        %w(app/controllers app/helpers app/models components lib)
+      end
+    
+      # The default set of code paths which will be added to the routing system
+      def default_controller_paths
+        %w(app/controllers components)
+      end
+
+      # Attempts to detect the directory to use for public files.
+      # If +assets+ exists in the plugin, this will be used. If +assets+ is missing
+      # but +public+ is found, +public+ will be used.
+      def default_public_directory
+        Engines.select_existing_paths(%w(assets public).map { |p| File.join(directory, p) }).first
+      end
+    
+    public
+  
+    def initialize(directory)
+      super directory
+      @code_paths = default_code_paths
+      @controller_paths = default_controller_paths
+      @public_directory = default_public_directory
     end
   
     # Returns a list of paths this plugin wishes to make available in $LOAD_PATH
