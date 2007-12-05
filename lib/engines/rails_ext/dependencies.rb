@@ -98,7 +98,7 @@ module Engines::RailsExt::Dependencies
     # try and load the plugin code first
     # can't use model, as there's nothing in the name to indicate that the file is a 'model' file
     # rather than a library or anything else.
-    ['controller', 'helper'].each do |file_type| 
+    Engines.code_mixing_file_types.each do |file_type| 
       # if we recognise this type
       # (this regexp splits out the module/filename from any instances of app/#{type}, so that
       #  modules are still respected.)
