@@ -34,7 +34,7 @@
 # the ordering of your routes directly affects how Rails will interpret incoming requests.
 # 
 # To add plugin routes into your application's <tt>routes.rb</tt> file, you need to explicitly 
-# map them in using the Engines::RailsExt::Routing#from_plugin method:
+# map them in using the Engines::RailsExtensions::Routing#from_plugin method:
 # 
 #   ApplicationController::Routing::Routes.draw do |map|
 #
@@ -52,14 +52,14 @@
 #
 # ---
 #
-# The Engines::RailsExt::Routing module defines extensions to Rails' 
+# The Engines::RailsExtensions::Routing module defines extensions to Rails' 
 # routing (ActionController::Routing) mechanism such that routes can be loaded 
 # from a given plugin.
 #
-# The key method is Engines::RailsExt::Routing#from_plugin, which can be called 
+# The key method is Engines::RailsExtensions::Routing#from_plugin, which can be called 
 # within your application's <tt>config/routes.rb</tt> file to load plugin routes at that point.
 #
-module Engines::RailsExt::Routing
+module Engines::RailsExtensions::Routing
   # Loads the set of routes from within a plugin and evaluates them at this
   # point within an application's main <tt>routes.rb</tt> file.
   #

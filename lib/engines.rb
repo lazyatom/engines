@@ -4,7 +4,7 @@ require File.join(File.dirname(__FILE__), 'engines/plugin/list')
 require File.join(File.dirname(__FILE__), 'engines/plugin/loader')
 require File.join(File.dirname(__FILE__), 'engines/plugin/locator')
 require File.join(File.dirname(__FILE__), 'engines/assets')
-require File.join(File.dirname(__FILE__), 'engines/rails_ext/rails')
+require File.join(File.dirname(__FILE__), 'engines/rails_extensions/rails')
 
 # == Parameters
 #
@@ -91,7 +91,7 @@ module Engines
     end
     
     def load_extensions
-      @@extensions.each { |name| require "engines/rails_ext/#{name}" }
+      @@extensions.each { |name| require "engines/rails_extensions/#{name}" }
       # load the testing extensions, if we are in the test environment.
       require "engines/testing" if RAILS_ENV == "test"
     end

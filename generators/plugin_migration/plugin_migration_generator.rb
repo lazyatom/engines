@@ -27,7 +27,7 @@ class PluginMigrationGenerator < Rails::Generator::Base
   protected
   
     # Create the plugin schema table if it doesn't already exist. See
-    # Engines::RailsExt::Migrations#initialize_schema_information_with_engine_additions
+    # Engines::RailsExtensions::Migrations#initialize_schema_information_with_engine_additions
     def ensure_plugin_schema_table_exists
       ActiveRecord::Base.connection.initialize_schema_information
     end

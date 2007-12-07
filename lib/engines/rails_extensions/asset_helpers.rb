@@ -53,7 +53,7 @@
 # Each one of these methods now accepts the key/value pair <tt>:plugin => "plugin_name"</tt>,
 # which can be used to specify the originating plugin for any assets.
 #
-module Engines::RailsExt::AssetHelpers
+module Engines::RailsExtensions::AssetHelpers
   def self.included(base) #:nodoc:
     base.class_eval do
       [:stylesheet_link_tag, :javascript_include_tag, :image_path, :image_tag].each do |m|
@@ -64,12 +64,12 @@ module Engines::RailsExt::AssetHelpers
 
   # Adds plugin functionality to Rails' default stylesheet_link_tag method.
   def stylesheet_link_tag_with_engine_additions(*sources)
-    stylesheet_link_tag_without_engine_additions(*Engines::RailsExt::AssetHelpers.pluginify_sources("stylesheets", *sources))
+    stylesheet_link_tag_without_engine_additions(*Engines::RailsExtensions::AssetHelpers.pluginify_sources("stylesheets", *sources))
   end
 
   # Adds plugin functionality to Rails' default javascript_include_tag method.  
   def javascript_include_tag_with_engine_additions(*sources)
-    javascript_include_tag_without_engine_additions(*Engines::RailsExt::AssetHelpers.pluginify_sources("javascripts", *sources))
+    javascript_include_tag_without_engine_additions(*Engines::RailsExtensions::AssetHelpers.pluginify_sources("javascripts", *sources))
   end
 
   #--
@@ -79,7 +79,7 @@ module Engines::RailsExt::AssetHelpers
   # Adds plugin functionality to Rails' default image_path method.
   def image_path_with_engine_additions(source, options={})
     options.stringify_keys!
-    source = Engines::RailsExt::AssetHelpers.plugin_asset_path(options["plugin"], "images", source) if options["plugin"]
+    source = Engines::RailsExtensions::AssetHelpers.plugin_asset_path(options["plugin"], "images", source) if options["plugin"]
     image_path_without_engine_additions(source)
   end
 
@@ -87,7 +87,7 @@ module Engines::RailsExt::AssetHelpers
   def image_tag_with_engine_additions(source, options={})
     options.stringify_keys!
     if options["plugin"]
-      source = Engines::RailsExt::AssetHelpers.plugin_asset_path(options["plugin"], "images", source)
+      source = Engines::RailsExtensions::AssetHelpers.plugin_asset_path(options["plugin"], "images", source)
       options.delete("plugin")
     end
     image_tag_without_engine_additions(source, options)
@@ -112,6 +112,8 @@ module Engines::RailsExt::AssetHelpers
     "/#{Engines.plugins[plugin_name].public_asset_directory}/#{type}/#{asset}"
   end
   
-  ActionView::Helpers::AssetTagHelper.send :include, self
 end
 
+module ::ActionView::Helpers::AssetTagHelper
+  include Engines::RailsExtensions::AssetHelpers
+end

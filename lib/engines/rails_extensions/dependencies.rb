@@ -34,7 +34,7 @@
 # The list method remains as it was defined in the plugin controller.
 #
 # The same basic principle applies to helpers, and also views and partials (although
-# view overriding is performed in Engines::RailsExt::Templates; see that
+# view overriding is performed in Engines::RailsExtensions::Templates; see that
 # module for more information).
 #
 # === What about models?
@@ -61,13 +61,13 @@
 #
 # ---
 #
-# The Engines::RailsExt::Dependencies module includes a method to
+# The Engines::RailsExtensions::Dependencies module includes a method to
 # override Dependencies.require_or_load, which is called to load code needed
 # by Rails as it encounters constants that aren't defined.
 #
 # This method is enhanced with the code-mixing features described above.
 #
-module Engines::RailsExt::Dependencies
+module Engines::RailsExtensions::Dependencies
   def self.included(base) #:nodoc:
     base.class_eval { alias_method_chain :require_or_load, :engine_additions }
   end
@@ -137,8 +137,9 @@ module Engines::RailsExt::Dependencies
     # if we managed to load a file, return true. If not, default to the original method.
     # Note that this relies on the RHS of a boolean || not to be evaluated if the LHS is true.
     file_loaded || require_or_load_without_engine_additions(file_name, const_path)
-  end
-  
-  ::Dependencies.send :include, self
+  end  
 end
 
+module ::Dependencies 
+  include Engines::RailsExtensions::Dependencies
+end

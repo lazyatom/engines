@@ -6,7 +6,7 @@
 # with the version number that plugin should be at. The plugin's migrations
 # will then be used to migrate up (or down) to the given version.
 #
-# For more information, see Engines::RailsExt::Migrations
+# For more information, see Engines::RailsExtensions::Migrations
 class Engines::Plugin::Migrator < ActiveRecord::Migrator
 
   # We need to be able to set the 'current' engine being migrated.

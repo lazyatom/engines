@@ -1,5 +1,5 @@
 # As well as providing code overloading for controllers and helpers 
-# (see Engines::RailsExt::Dependencies), the engines plugin also allows
+# (see Engines::RailsExtensions::Dependencies), the engines plugin also allows
 # developers to selectively override views and partials within their application.
 #
 # == An example
@@ -19,7 +19,7 @@
 #
 # This view will then be rendered in favour of that in the plugin.
 #
-module Engines::RailsExt::Templates
+module Engines::RailsExtensions::Templates
   
   # Override the finding of partials and views. This is achieved by wrapping
   # the (private) method #full_template_path_with_engine_additions, that checks
@@ -60,8 +60,7 @@ module Engines::RailsExt::Templates
           full_template_path_without_engine_additions(template_path, extension)
         end    
       end
-      
-    ::ActionView::Base.send :include, self
+            
   end
 
   # The Layout module overrides a single (private) method in ActionController::Layout::ClassMethods,
@@ -81,6 +80,13 @@ module Engines::RailsExt::Templates
         layout_list_without_engine_additions + Dir["{#{plugin_layouts.join(",")}}/**/*"]
       end
       
-    ::ActionController::Layout::ClassMethods.send :include, self  
   end
+end
+
+class ActionView::Base
+  include Engines::RailsExtensions::Templates::ActionView
+end
+
+module ActionController::Layout::ClassMethods
+  include Engines::RailsExtensions::Templates::Layout
 end

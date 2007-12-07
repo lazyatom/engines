@@ -1,5 +1,5 @@
 # Contains the enhancements to Rails' migrations system to support the 
-# Engines::Plugin::Migrator. See Engines::RailsExt::Migrations for more
+# Engines::Plugin::Migrator. See Engines::RailsExtensions::Migrations for more
 # information.
 
 require "engines/plugin/migrator"
@@ -120,13 +120,13 @@ require "engines/plugin/migrator"
 #
 # ---
 #
-# The Engines::RailsExt::Migrations module defines extensions for Rails' 
+# The Engines::RailsExtensions::Migrations module defines extensions for Rails' 
 # migration systems. Specifically:
 #
 # * Adding a hook to initialize_schema_information to create the plugin schema
 #   info table.
 #
-module Engines::RailsExt::Migrations
+module Engines::RailsExtensions::Migrations
   def self.included(base) # :nodoc:
     base.class_eval { alias_method_chain :initialize_schema_information, :engine_additions }
   end

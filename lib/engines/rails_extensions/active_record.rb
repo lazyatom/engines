@@ -1,7 +1,7 @@
 # Here we add a single helpful method to ActiveRecord::Base. This method may be deprecated
 # in the future, since support for the Module#config mechanism which required it has
 # also been dropped.
-module Engines::RailsExt::ActiveRecord
+module Engines::RailsExtensions::ActiveRecord
   # NOTE: Currently the Migrations system will ALWAYS wrap given table names
   # in the prefix/suffix, so any table name set via ActiveRecord::Base#set_table_name, 
   # for instance will always get wrapped in the process of migration. For this 
@@ -15,6 +15,8 @@ module Engines::RailsExt::ActiveRecord
     table_name_prefix + name + table_name_suffix
   end
   
-  ActiveRecord::Base.extend self
 end
 
+class ::ActiveRecord::Base
+  extend Engines::RailsExtensions::ActiveRecord
+end
