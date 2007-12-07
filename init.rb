@@ -1,2 +1,2 @@
-Engines.init if defined? 'Engines'
+Engines.init if defined? :Engines
 
