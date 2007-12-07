@@ -91,7 +91,6 @@ module Engines::RailsExt::Dependencies
   # mirroring the behaviour of +require_or_load+ from Rails (which mirrors
   # that of Ruby's own +require+, I believe).
   def require_or_load_with_engine_additions(file_name, const_path=nil)
-    puts "i am being asked to load: #{file_name.inspect}"
     return require_or_load_without_engine_additions(file_name, const_path) if Engines.disable_code_mixing
 
     file_loaded = false
