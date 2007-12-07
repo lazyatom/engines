@@ -10,9 +10,7 @@ module Engines
         
         # Registers the plugin's controller_paths for the routing system. 
         def register_to_routing(plugin)
-          plugin.select_existing_paths(:controller_paths).each do |path|
-            initializer.configuration.controller_paths << path
-          end
+          initializer.configuration.controller_paths += plugin.select_existing_paths(:controller_paths)
           initializer.configuration.controller_paths.uniq!
         end
     end

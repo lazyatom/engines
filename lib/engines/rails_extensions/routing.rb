@@ -65,12 +65,14 @@ module Engines::RailsExtensions::Routing
   #
   # Plugin routes are loaded from <tt><plugin_root>/routes.rb</tt>.
   def from_plugin(name)
-    map = self
+    map = self # to make 'map' available within the plugin route file
     routes_path = Engines.plugins[name].routes_path
     Engines.logger.debug "loading routes from #{routes_path}"
     eval(IO.read(routes_path), binding, routes_path) if File.file?(routes_path)
   end
-  
-  ActionController::Routing::RouteSet::Mapper.send :include, self
 end
 
+  
+class ActionController::Routing::RouteSet::Mapper
+  include Engines::RailsExtensions::Routing
+end
