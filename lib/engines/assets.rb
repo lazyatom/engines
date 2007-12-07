@@ -13,7 +13,7 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
       def initialize_base_public_directory
         dir = Engines.public_directory
         unless File.exist?(dir)
-          logger.debug "Creating public engine files directory '#{dir}'"
+          Engines.logger.debug "Creating public engine files directory '#{dir}'"
           FileUtils.mkdir(dir)
         end
         readme = File.join(dir, "README")        
@@ -26,11 +26,11 @@ should edit the files within the <plugin_name>/assets/ directory itself.}
       def mirror_files_for(plugin)
         return if plugin.public_directory.nil?
         begin 
-          logger.debug "Attempting to copy plugin assets from '#{plugin.public_directory}' to '#{Engines.public_directory}'"
+          Engines.logger.debug "Attempting to copy plugin assets from '#{plugin.public_directory}' to '#{Engines.public_directory}'"
           mirror_files_from(plugin.public_directory, File.join(Engines.public_directory, plugin.name))      
         rescue Exception => e
-          logger.warn "WARNING: Couldn't create the public file structure for plugin '#{plugin.name}'; Error follows:"
-          logger.warn e
+          Engines.logger.warn "WARNING: Couldn't create the public file structure for plugin '#{plugin.name}'; Error follows:"
+          Engines.logger.warn e
         end
       end
   

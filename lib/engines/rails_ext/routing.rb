@@ -67,7 +67,7 @@ module Engines::RailsExt::Routing
   def from_plugin(name)
     map = self
     routes_path = Engines.plugins[name].routes_path
-    logger.debug "loading routes from #{routes_path}"
+    Engines.logger.debug "loading routes from #{routes_path}"
     eval(IO.read(routes_path), binding, routes_path) if File.file?(routes_path)
   end
   

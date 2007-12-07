@@ -6,10 +6,6 @@ begin
   end
 end
 
-def logger
-  RAILS_DEFAULT_LOGGER
-end
-
 require File.join(File.dirname(__FILE__), 'lib/engines')
 
 # initialize Rails::Configuration with our own default values to spare users 

@@ -86,6 +86,10 @@ module Engines
       Engines::Assets.initialize_base_public_directory
     end
     
+    def logger
+      RAILS_DEFAULT_LOGGER
+    end
+    
     def load_extensions
       @@extensions.each { |name| require "engines/rails_ext/#{name}" }
       # load the testing extensions, if we are in the test environment.

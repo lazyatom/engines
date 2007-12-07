@@ -109,9 +109,9 @@ module Engines::RailsExt::Dependencies
         # implementations
         Engines.plugins.each do |plugin|
           plugin_file_name = File.expand_path(File.join(plugin.directory, 'app', "#{file_type}s", base_name))
-          logger.debug("checking plugin '#{plugin.name}' for '#{base_name}'")
+          Engines.logger.debug("checking plugin '#{plugin.name}' for '#{base_name}'")
           if File.file?("#{plugin_file_name}.rb")
-            logger.debug("==> loading from plugin '#{plugin.name}'")
+            Engines.logger.debug("==> loading from plugin '#{plugin.name}'")
             file_loaded = true if require_or_load_without_engine_additions(plugin_file_name, const_path)
           end
         end
@@ -120,15 +120,15 @@ module Engines::RailsExt::Dependencies
         # rails load mechanism, EXCEPT when we're testing engines and could load this file
         # from an engine
         if Engines.disable_application_code_loading
-          logger.debug("loading from application disabled.")
+          Engines.logger.debug("loading from application disabled.")
         else
           # Ensure we are only loading from the /app directory at this point
           app_file_name = File.join(RAILS_ROOT, 'app', "#{file_type}s", "#{base_name}")
           if File.file?("#{app_file_name}.rb")
-            logger.debug("loading from application: #{base_name}")
+            Engines.logger.debug("loading from application: #{base_name}")
             file_loaded = true if require_or_load_without_engine_additions(app_file_name, const_path)
           else
-            logger.debug("(file not found in application)")
+            Engines.logger.debug("(file not found in application)")
           end
         end        
       end 
