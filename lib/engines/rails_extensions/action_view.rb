@@ -83,10 +83,16 @@ module Engines::RailsExtensions::Templates
   end
 end
 
-class ActionView::Base
-  include Engines::RailsExtensions::Templates::ActionView
+module ::ActionView
+  class Base #:nodoc:
+    include Engines::RailsExtensions::Templates::ActionView
+  end
 end
 
-module ActionController::Layout::ClassMethods
-  include Engines::RailsExtensions::Templates::Layout
+module ::ActionController #:nodoc:
+  module Layout #:nodoc:
+    module ClassMethods #:nodoc:
+      include Engines::RailsExtensions::Templates::Layout
+    end
+  end
 end

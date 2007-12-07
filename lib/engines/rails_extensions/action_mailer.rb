@@ -52,7 +52,9 @@ end
 
 # We don't need to do this if ActionMailer hasn't been loaded.
 if Object.const_defined?(:ActionMailer) 
-  class ActionMailer::Base
-    include Engines::RailsExtensions::ActionMailer
+  module ::ActionMailer #:nodoc:
+    class Base #:nodoc:
+      include Engines::RailsExtensions::ActionMailer
+    end
   end
 end

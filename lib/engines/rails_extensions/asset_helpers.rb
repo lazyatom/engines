@@ -114,6 +114,6 @@ module Engines::RailsExtensions::AssetHelpers
   
 end
 
-module ::ActionView::Helpers::AssetTagHelper
+module ::ActionView::Helpers::AssetTagHelper #:nodoc:
   include Engines::RailsExtensions::AssetHelpers
 end

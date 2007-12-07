@@ -147,8 +147,14 @@ module Engines::RailsExtensions::Migrations
       # Schema has been initialized
     end
   end
-  
-  ::ActiveRecord::ConnectionAdapters::SchemaStatements.send :include, self
+end
+
+module ::ActiveRecord #:nodoc:
+  module ConnectionAdapters #:nodoc:
+    module SchemaStatements #:nodoc:
+      include Engines::RailsExtensions::Migrations
+    end
+  end
 end
 
 # Set ActiveRecord to ignore the plugin schema table by default

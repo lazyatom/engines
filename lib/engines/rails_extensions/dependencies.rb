@@ -140,6 +140,6 @@ module Engines::RailsExtensions::Dependencies
   end  
 end
 
-module ::Dependencies 
+module ::Dependencies #:nodoc:
   include Engines::RailsExtensions::Dependencies
 end

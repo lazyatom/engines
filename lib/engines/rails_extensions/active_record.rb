@@ -17,6 +17,8 @@ module Engines::RailsExtensions::ActiveRecord
   
 end
 
-class ::ActiveRecord::Base
-  extend Engines::RailsExtensions::ActiveRecord
+module ::ActiveRecord #:nodoc:
+  class Base #:nodoc:
+    extend Engines::RailsExtensions::ActiveRecord
+  end
 end

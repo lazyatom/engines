@@ -73,6 +73,12 @@ module Engines::RailsExtensions::Routing
 end
 
   
-class ActionController::Routing::RouteSet::Mapper
-  include Engines::RailsExtensions::Routing
+module ::ActionController #:nodoc:
+  module Routing #:nodoc:
+    class RouteSet #:nodoc:
+      class Mapper #:nodoc:
+        include Engines::RailsExtensions::Routing
+      end
+    end
+  end
 end
