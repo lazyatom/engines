@@ -75,6 +75,7 @@ module Engines
     def load(initializer)
       return if loaded?
       super initializer
+      add_plugin_view_paths
       Assets.mirror_files_for(self)
     end    
   
@@ -83,6 +84,13 @@ module Engines
     def select_existing_paths(name)
       Engines.select_existing_paths(self.send(name).map { |p| File.join(directory, p) })
     end    
+
+    def add_plugin_view_paths
+      view_path = File.join(directory, 'app', 'views')
+      if File.exist?(view_path)
+        ActionController::Base.view_paths.insert(1, view_path) # push it just underneath the app
+      end
+    end
 
     # The path to this plugin's public files
     def public_asset_directory
