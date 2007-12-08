@@ -1,4 +1,4 @@
-require 'ActiveSupport'
+require 'active_support'
 require File.join(File.dirname(__FILE__), 'engines/plugin')
 require File.join(File.dirname(__FILE__), 'engines/plugin/list')
 require File.join(File.dirname(__FILE__), 'engines/plugin/loader')
@@ -42,8 +42,8 @@ module Engines
   self.plugins = Engines::Plugin::List.new  
   
   # List of extensions to load, can be changed in init.rb before calling Engines.init
-  mattr_accessor :extensions
-  self.extensions = %w(active_record action_mailer action_view asset_helpers routing migrations dependencies)
+  mattr_accessor :rails_extensions
+  self.rails_extensions = %w(active_record action_mailer action_view asset_helpers routing migrations dependencies)
   
   # The name of the public directory to mirror public engine assets into.
   # Defaults to <tt>RAILS_ROOT/public/plugin_assets</tt>.
@@ -91,7 +91,7 @@ module Engines
     end
     
     def load_extensions
-      @@extensions.each { |name| require "engines/rails_extensions/#{name}" }
+      rails_extensions.each { |name| require "engines/rails_extensions/#{name}" }
       # load the testing extensions, if we are in the test environment.
       require "engines/testing" if RAILS_ENV == "test"
     end
