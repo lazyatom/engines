@@ -43,7 +43,7 @@ module Engines
   
   # List of extensions to load, can be changed in init.rb before calling Engines.init
   mattr_accessor :rails_extensions
-  self.rails_extensions = %w(active_record action_mailer asset_helpers routing migrations dependencies)
+  self.rails_extensions = %w(active_record asset_helpers routing migrations dependencies)
   
   # The name of the public directory to mirror public engine assets into.
   # Defaults to <tt>RAILS_ROOT/public/plugin_assets</tt>.
