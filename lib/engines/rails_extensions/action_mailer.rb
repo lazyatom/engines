@@ -17,7 +17,7 @@ module Engines::RailsExtensions::ActionMailer
       # TODO commented this out because it seems to break ActionMailer
       # how can this be fixed?
       
-      # alias_method_chain :template_path, :engine_additions
+      #alias_method_chain :template_path, :engine_additions
       alias_method_chain :render, :engine_additions
     end
   end
@@ -44,9 +44,12 @@ module Engines::RailsExtensions::ActionMailer
     def render_with_engine_additions(opts)
       template_path_for_method = Dir["#{template_path}/#{opts[:file]}*"].first
       body = opts.delete(:body)
-      i = initialize_template_class(body)
-      i.base_path = File.dirname(template_path_for_method)
-      i.render(opts)
+      if opts[:file] && opts[:file] !~ /\//
+        opts[:file] = "#{mailer_name}/#{opts[:file]}"
+      end
+      action_view_renderer = initialize_template_class(body)
+      action_view_renderer.base_path = File.dirname(template_path_for_method)
+      action_view_renderer.render(opts)
     end
 end
 
