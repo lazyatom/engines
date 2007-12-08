@@ -1,5 +1,9 @@
-= 1.2.0 - MASSIVE INTERNAL REFACTORING
+= 2.0 - (ANOTHER) MASSIVE INTERNAL REFACTORING
 
+* Engines now conforms to the new plugin loading mechanism, delegating plugin load order and lots of other things to Rails itself.
+
+
+= 1.2.0 - MASSIVE INTERNAL REFACTORING
 
 * !!!Support for Rails < 1.2 has been dropped!!!; if you are using Rails =< 1.1.6, please use Engines 1.1.6, available from http://svn.rails-engines.org/engines/tags/rel_1.1.6
 

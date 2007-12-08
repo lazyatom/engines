@@ -3,7 +3,7 @@
 # 
 # When developing plugins which contain controllers, it seems obvious that including
 # the corresponding routes would be extremely useful. This is particularly true
-# when exposing RESTful resources using the new REST-ian features of Rails 1.2.
+# when exposing RESTful resources using the new REST-ian features of Rails.
 #
 # == Including routes in your plugin
 #
