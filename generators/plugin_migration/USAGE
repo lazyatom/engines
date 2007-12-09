@@ -37,7 +37,7 @@ For those unfortunate few, I have two pieces of advice:
     creating your own migrations. To manually migrate a plugin to a specific
     version, simply use
     
-      Rails.plugins[:your_plugin_name].migrate(version)
+      Engines.plugins[:your_plugin_name].migrate(version)
       
     where version is the integer of the migration this plugin should end
     up at.

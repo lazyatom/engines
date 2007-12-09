@@ -65,11 +65,11 @@ module Engines::Testing
   # PluginList#by_precedence.
   #
   # This method is called by the engines-supplied plugin testing rake tasks
-  def self.setup_plugin_fixtures(plugins=Rails.plugins.by_precedence)
+  def self.setup_plugin_fixtures(plugins = Engines.plugins.by_precedence)
     
     # Copy all plugin fixtures, and then the application fixtures, into this directory
     plugins.each do |plugin| 
-      plugin_fixtures_directory =  File.join(plugin.root, "test", "fixtures")
+      plugin_fixtures_directory =  File.join(plugin.directory, "test", "fixtures")
       if File.directory?(plugin_fixtures_directory)
         Engines.mirror_files_from(plugin_fixtures_directory, self.temporary_fixtures_directory)
       end

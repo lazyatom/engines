@@ -14,6 +14,11 @@ module Engines::RailsExtensions::ActiveRecord
   def wrapped_table_name(name)
     table_name_prefix + name + table_name_suffix
   end
+  
 end
 
-::ActiveRecord::Base.extend(Engines::RailsExtensions::ActiveRecord)
+module ::ActiveRecord #:nodoc:
+  class Base #:nodoc:
+    extend Engines::RailsExtensions::ActiveRecord
+  end
+end

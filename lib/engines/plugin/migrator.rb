@@ -1,4 +1,4 @@
-# The PluginMigrator class contains the logic to run migrations from
+# The Plugin::Migrator class contains the logic to run migrations from
 # within plugin directories. The directory in which a plugin's migrations
 # should be is determined by the Plugin#migration_directory method.
 #
@@ -7,7 +7,7 @@
 # will then be used to migrate up (or down) to the given version.
 #
 # For more information, see Engines::RailsExtensions::Migrations
-class Engines::PluginMigrator < ActiveRecord::Migrator
+class Engines::Plugin::Migrator < ActiveRecord::Migrator
 
   # We need to be able to set the 'current' engine being migrated.
   cattr_accessor :current_plugin
@@ -47,7 +47,7 @@ class Engines::PluginMigrator < ActiveRecord::Migrator
     end
   end
 
-  # Sets the version of the plugin in Engines::PluginMigrator.current_plugin to
+  # Sets the version of the plugin in Engines::Plugin::Migrator.current_plugin to
   # the given version.
   def set_schema_version(version)
     ActiveRecord::Base.connection.update(<<-ESQL

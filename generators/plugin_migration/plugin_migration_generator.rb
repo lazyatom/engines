@@ -35,13 +35,13 @@ class PluginMigrationGenerator < Rails::Generator::Base
     # Determine all the plugins which have migrations that aren't present
     # according to the plugin schema information from the database.
     def get_plugins_to_migrate(plugin_names)
-      
+
       # First, grab all the plugins which exist and have migrations
       @plugins_to_migrate = if plugin_names.empty?
-        Rails.plugins
+        Engines.plugins
       else
         plugin_names.map do |name| 
-          Rails.plugins[name] ? Rails.plugins[name] : raise("Cannot find the plugin '#{name}'")
+          Engines.plugins[name] ? Engines.plugins[name] : raise("Cannot find the plugin '#{name}'")
         end
       end
       
@@ -50,7 +50,7 @@ class PluginMigrationGenerator < Rails::Generator::Base
       # Then find the current versions from the database    
       @current_versions = {}
       @plugins_to_migrate.each do |plugin|
-        @current_versions[plugin.name] = Engines::PluginMigrator.current_version(plugin)
+        @current_versions[plugin.name] = Engines::Plugin::Migrator.current_version(plugin)
       end
 
       # Then find the latest versions from their migration directories
@@ -61,7 +61,7 @@ class PluginMigrationGenerator < Rails::Generator::Base
       
       # Remove any plugins that don't need migration
       @plugins_to_migrate.map { |p| p.name }.each do |name|
-        @plugins_to_migrate.delete(Rails.plugins[name]) if @current_versions[name] == @new_versions[name]
+        @plugins_to_migrate.delete(Engines.plugins[name]) if @current_versions[name] == @new_versions[name]
       end
       
       @options[:assigns][:plugins] = @plugins_to_migrate

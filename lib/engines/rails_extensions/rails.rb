@@ -1,20 +1,11 @@
-# In order to give a richer infrastructure for dealing with plugins, the engines
-# plugin adds two new attributes to the Rails module:
-#
-# [+plugins+]       A PluginList instance which holds the currently loaded plugins
-# [+configuration+] The current Rails::Configuration instance, so that we can
-#                   query any parameters that might be set *after* Rails has
-#                   loaded, as well as during plugin initialization
-#
-#--
-# Here we just re-open the Rails module and add our custom accessors; it
-# may be cleaner to seperate them into a module, but in this case that seems
-# like overkill.
-#++
+# This is only here to allow for backwards compability with Engines that
+# have been implemented based on Engines for Rails 1.2. It is preferred that
+# the plugin list be accessed via Engines.plugins.
+
 module Rails
-  # The set of all loaded plugins
-  mattr_accessor :plugins
-  
-  # The Rails::Initializer::Configuration object
-  mattr_accessor :configuration
+  # Returns the Engines::Plugin::List from Engines.plugins. It is preferable to
+  # access Engines.plugins directly.
+  def self.plugins
+    Engines.plugins
+  end
 end

@@ -70,8 +70,8 @@ namespace :doc do
         options << '-T html'
 
         # Include every file in the plugin's code_paths (see Plugin#code_paths)
-        if Rails.plugins[plugin]
-          files.include("#{plugin_base}/{#{Rails.plugins[plugin].code_paths.join(",")}}/**/*.rb")
+        if Engines.plugins[plugin]
+          files.include("#{plugin_base}/{#{Engines.plugins[plugin].code_paths.join(",")}}/**/*.rb")
         end
         if File.exists?("#{plugin_base}/README")
           files.include("#{plugin_base}/README")    

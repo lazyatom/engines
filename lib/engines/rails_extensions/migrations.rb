@@ -1,8 +1,8 @@
 # Contains the enhancements to Rails' migrations system to support the 
-# Engines::PluginMigrator. See Engines::RailsExtensions::Migrations for more
+# Engines::Plugin::Migrator. See Engines::RailsExtensions::Migrations for more
 # information.
 
-require "engines/plugin_migrator"
+require "engines/plugin/migrator"
 
 # = Plugins and Migrations: Background
 #
@@ -64,10 +64,10 @@ require "engines/plugin_migrator"
 # 
 #   class MigrateTaggingPluginToVersion3 < ActiveRecord::Migration
 #     def self.up
-#       Rails.plugins[:tagging].migrate(3)
+#       Engines.plugins[:tagging].migrate(3)
 #     end
 #     def self.down
-#       Rails.plugins[:tagging].migrate(0)
+#       Engines.plugins[:tagging].migrate(0)
 #     end
 #   end
 #
@@ -94,10 +94,10 @@ require "engines/plugin_migrator"
 #
 #   class MigrateTaggingPluginToVersion3 < ActiveRecord::Migration
 #     def self.up
-#       Rails.plugins[:tagging].migrate(5)
+#       Engines.plugins[:tagging].migrate(5)
 #     end
 #     def self.down
-#       Rails.plugins[:tagging].migrate(3)
+#       Engines.plugins[:tagging].migrate(3)
 #     end
 #   end
 #
@@ -116,7 +116,7 @@ require "engines/plugin_migrator"
 # Simply get the Plugin instance, and its Plugin#migrate method with the version
 # you wish to end up at:
 #
-#   Rails.plugins[:whatever].migrate(version)
+#   Engines.plugins[:whatever].migrate(version)
 #
 # ---
 #
@@ -133,14 +133,14 @@ module Engines::RailsExtensions::Migrations
 
   # Create the schema tables, and ensure that the plugin schema table
   # is also initialized. The plugin schema info table is defined by
-  # Engines::PluginMigrator.schema_info_table_name.
+  # Engines::Plugin::Migrator.schema_info_table_name.
   def initialize_schema_information_with_engine_additions
     initialize_schema_information_without_engine_additions
-    
+
     # create the plugin schema stuff.    
     begin
       execute <<-ESQL
-        CREATE TABLE #{Engines::PluginMigrator.schema_info_table_name} 
+        CREATE TABLE #{Engines::Plugin::Migrator.schema_info_table_name} 
           (plugin_name #{type_to_sql(:string)}, version #{type_to_sql(:integer)})
       ESQL
     rescue ActiveRecord::StatementInvalid
@@ -149,7 +149,13 @@ module Engines::RailsExtensions::Migrations
   end
 end
 
-::ActiveRecord::ConnectionAdapters::SchemaStatements.send(:include, Engines::RailsExtensions::Migrations)
+module ::ActiveRecord #:nodoc:
+  module ConnectionAdapters #:nodoc:
+    module SchemaStatements #:nodoc:
+      include Engines::RailsExtensions::Migrations
+    end
+  end
+end
 
 # Set ActiveRecord to ignore the plugin schema table by default
 ::ActiveRecord::SchemaDumper.ignore_tables << Engines.schema_info_table
