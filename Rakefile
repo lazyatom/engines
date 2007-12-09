@@ -17,7 +17,7 @@ end
 desc 'Run the engine plugin tests within their test harness'
 task :cruise do
   # checkout the project into a temporary directory
-  version = "rails_1.2"
+  version = "rails_2.0"
   test_dir = "#{Dir.tmpdir}/engines_plugin_#{version}_test"
   puts "Checking out test harness for #{version} into #{test_dir}"
   `svn co http://svn.rails-engines.org/test/engines/#{version} #{test_dir}`

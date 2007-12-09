@@ -4,15 +4,14 @@ For more information, see http://rails-engines.org
 
 = Using the plugin
 
-With engines 1.2, no extra configuration in environment.rb is required. Having the plugin installed will automatically enable sharing of code within <tt>plugin/app/</tt> directories. Developers should be aware that the <tt>config.plugins</tt> parameter can be used to control plugin load order, if this is important for your application.
+Once you've installed the engines plugin, you'll need to add a single line to the top of config/environment.rb:
 
-=== config.plugins
-
-With Rails 1.2, the <tt>config.plugins</tt> list can be used to specify the order in which plugins are loaded. It's recommended (although not required) that you load the engines plugin first, and any other plugins later. The engines plugin enhances Rails' processing of <tt>config.plugins</tt> for occasions where you only care about the order of a small selection of your application's plugins. For instance, if you want to load +engines+ first, and anything else afterwards, then
-
-  config.plugins = ["engines", "*"]
+  require File.join(File.dirname(__FILE__), '../vendor/plugins/engines/boot')
   
-will ensure that engines is loaded first, and everything else (in whatever order Rails chooses) afterwards.
+You should add this line just below the require for Rails' own boot.rb file. This will enabled the enhanced plugin loading mechanism automatically for you (i.e. you don't need to set config.plugin_loader manually).
+
+With that aside, you're now ready to start using more powerful plugins in your application. Read on to find out more about what the engines plugin enables.
+
 
 == Better plugins
 
