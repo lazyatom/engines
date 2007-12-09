@@ -3,6 +3,19 @@
 * Engines now conforms to the new plugin loading mechanism, delegating plugin load order and lots of other things to Rails itself.
 
 
+
+= 1.2.2
+
+* Added the ability to code mix different types of files, cleaning up the existing code-mixing implementation slightly (Ticket #271)
+
+
+= 1.2.1
+
+* Added documentation to clarify some of the issues with Rails unloading classes that aren't required using "require_dependency" (Ticket #266)
+
+* Fixed a bug where test_help was being loaded when it wasn't needed, and was actually causing problems (Ticket #265)
+
+
 = 1.2.0 - MASSIVE INTERNAL REFACTORING
 
 * !!!Support for Rails < 1.2 has been dropped!!!; if you are using Rails =< 1.1.6, please use Engines 1.1.6, available from http://svn.rails-engines.org/engines/tags/rel_1.1.6
