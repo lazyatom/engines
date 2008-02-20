@@ -27,6 +27,34 @@ unless Rake::TaskManager.methods.include?(:redefine_task)
   end
 end
 
+namespace :db do
+  namespace :migrate do
+    desc 'Migrate database and plugins to current status.'
+    task :all => [ 'db:migrate', 'db:migrate:plugins' ]
+    
+    desc 'Migrate plugins to current status.'
+    task :plugins => :environment do
+      Engines.plugins.each do |plugin|
+        next unless File.exists? plugin.migration_directory
+        puts "Migrating plugin #{plugin.name} ..."
+        plugin.migrate
+      end
+    end
+
+    desc 'Migrate a specified plugin.'
+    task({:plugin => :environment}, :name, :version) do |task, args|
+      name = args[:name] || ENV['NAME']
+      if plugin = Engines.plugins[name]
+        version = args[:version] || ENV['VERSION']
+        puts "Migrating #{plugin.name} to " + (version ? "version #{version}" : 'latest version') + " ..."
+        plugin.migrate(version ? version.to_i : nil)
+      else
+        puts "Plugin #{name} does not exist."
+      end
+    end    
+  end
+end
+
 
 namespace :db do  
   namespace :fixtures do
