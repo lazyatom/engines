@@ -131,18 +131,23 @@ module Engines
     def mix_code_from(*types)
       self.code_mixing_file_types += types.map { |x| x.to_s.singularize }
     end
-  
+    
     # A general purpose method to mirror a directory (+source+) into a destination
     # directory, including all files and subdirectories. Files will not be mirrored
     # if they are identical already (checked via FileUtils#identical?).
     def mirror_files_from(source, destination)
       return unless File.directory?(source)
-  
+      
       # TODO: use Rake::FileList#pathmap?    
       source_files = Dir[source + "/**/*"]
       source_dirs = source_files.select { |d| File.directory?(d) }
-      source_files -= source_dirs  
-  
+      source_files -= source_dirs
+      
+      unless source_files.empty?
+        base_target_dir = File.join(destination, File.dirname(source_files.first))
+        FileUtils.mkdir_p(base_target_dir)
+      end
+      
       source_dirs.each do |dir|
         # strip down these paths so we have simple, relative paths we can
         # add to the destination
@@ -153,7 +158,7 @@ module Engines
           raise "Could not create directory #{target_dir}: \n" + e
         end
       end
-
+      
       source_files.each do |file|
         begin
           target = File.join(destination, file.gsub(source, ''))
