@@ -89,6 +89,7 @@ module Engines
       view_path = File.join(directory, 'app', 'views')
       if File.exist?(view_path)
         ActionController::Base.view_paths.insert(1, view_path) # push it just underneath the app
+        ActionView::TemplateFinder.process_view_paths(view_path)
       end
     end
 
