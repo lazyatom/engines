@@ -1,6 +1,6 @@
 # Tests in this file ensure that:
 #
-# * the application /app/[controllers|helpers|models], /components and /lib 
+# * the application /app/[controllers|helpers|models] and /lib 
 #   paths preceed the corresponding plugin paths
 # * the plugin paths are added to $LOAD_PATH in the order in which plugins are 
 #   loaded
@@ -16,7 +16,7 @@ class LoadPathTest < Test::Unit::TestCase
   # Rails core functionality. On the other hand Engines relies on this to some
   # extend so this will choke if something important changes in Rails.
   
-  # the application app/..., components/ and lib/ directories should appear
+  # the application app/... and lib/ directories should appear
   # before any plugin directories
   
   def test_application_app_libs_should_precede_all_plugin_app_libs
