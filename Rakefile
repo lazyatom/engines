@@ -84,25 +84,25 @@ namespace :test do
         FileUtils.mkdir_p vendor_dir
         
         if ENV['RAILS'] == 'edge'
-          out.puts ">>> Cloning rails from GitHub"
+          out.puts "    Cloning rails from GitHub"
           run "cd #{vendor_dir} && git clone --depth 1 git://github.com/rails/rails.git"
         elsif File.exist?(ENV['RAILS'])
-          out.puts ">>> Linking rails from #{ENV['RAILS']}"
+          out.puts "    Linking rails from #{ENV['RAILS']}"
           run "cd #{vendor_dir} && ln -s #{ENV['RAILS']} rails"
         else
           raise "Couldn't build test application from '#{ENV['RAILS']}'"
         end
         
-        out.puts ">>> generating rails default directory structure"
+        out.puts "    generating rails default directory structure"
         run "ruby #{File.join(vendor_dir, 'rails', 'railties', 'bin', 'rails')} #{test_app_dir}"
       else
         version = `rails --version`.chomp.split.last
-        out.puts ">>> building rails using the 'rails' command (rails version: #{version})"
+        out.puts "    building rails using the 'rails' command (rails version: #{version})"
         run "rails #{test_app_dir}"
       end
       
       # get the database config and schema in place
-      out.puts ">>> writing database.yml"
+      out.puts "    writing database.yml"
       require 'yaml'
       File.open(File.join(test_app_dir, 'config', 'database.yml'), 'w') do |f|
         f.write(%w(development test).inject({}) do |h, env| 
@@ -165,7 +165,7 @@ namespace :test do
                 
     insert_line("require 'engines_test_helper'", :into => 'test/test_helper.rb')
     
-    puts "> mirroring test application files into #{test_app_dir}"
+    puts "> Mirroring test application files into #{test_app_dir}"
     mirror_test_files('app')
     mirror_test_files('lib')
     mirror_test_files('plugins', 'vendor')
@@ -182,6 +182,7 @@ namespace :test do
 end
 
 task :test => "test:mirror_engine_files" do
+  puts "> Loading the test application environment and running tests"
   # We use exec here to replace the current running rake process
   exec("cd #{test_app_dir} && rake")
 end
