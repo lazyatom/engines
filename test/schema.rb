@@ -9,6 +9,9 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
+puts "> Loading engines test application base schema"
+ActiveRecord::Migration.verbose = ENV['VERBOSE'] || false
+
 ActiveRecord::Schema.define(:version => 3) do
 
   %w(aardvarks accounts apples banjos clowns dogs elephants

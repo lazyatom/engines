@@ -33,40 +33,87 @@ end
 
 namespace :test do
   
+  # Yields a block with STDOUT and STDERR silenced. If you *really* want
+  # to output something, the block is yielded with the original output
+  # streams, i.e.
+  #
+  #   silence do |o, e|
+  #     puts 'hello!' # no output produced
+  #     o.puts 'hello!' # output on STDOUT
+  #   end
+  #
+  # (based on silence_stream in ActiveSupport.)
+  def silence
+    yield(STDOUT, STDERR) if ENV['VERBOSE']
+    streams = [STDOUT, STDERR]
+    actual_stdout = STDOUT.dup
+    actual_stderr = STDERR.dup
+    streams.each do |s| 
+      s.reopen(RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null') 
+      s.sync = true
+    end
+    yield actual_stdout, actual_stderr
+  ensure
+    STDOUT.reopen(actual_stdout)
+    STDERR.reopen(actual_stderr)
+  end
+  
   def test_app_dir
     File.join(File.dirname(__FILE__), 'test_app')
   end
-    
+  
+  def run(cmd)
+    system(cmd) || raise("failed running '#{cmd}'")
+  end
+  
+  desc 'Remove the test application'
   task :clean do
     FileUtils.rm_r(test_app_dir) if File.exist?(test_app_dir)
   end
   
+  desc 'Build the test rails application (use RAILS=[edge,<directory>] to test against specific version)'
   task :generate_app do
-    # if ENV['edge']
-    #   vendor_dir = File.join(test_app_dir, 'vendor')
-    #   FileUtils.mkdir_p vendor_dir
-    #   system "cd #{vendor_dir} && git clone --depth 1 git://github.com/rails/rails.git"
-    #   system "ruby #{File.join(vendor_dir, 'rails', 'railties', 'bin', 'rails')} #{test_app_dir}"
-    # else
-    #   system "rails #{test_app_dir}"
-    # end
+    silence do |out, err|
     
-    # offline fix for getting rails
-    vendor_dir = File.join(test_app_dir, 'vendor')
-    FileUtils.mkdir_p vendor_dir
-    system "cd #{vendor_dir} && ln -s /Users/james/Code/rails/git/rails rails"
-    system "ruby #{File.join(vendor_dir, 'rails', 'railties', 'bin', 'rails')} #{test_app_dir}"
-    
-    # get the database config and schema in place
-    require 'yaml'
-    File.open(File.join(test_app_dir, 'config', 'database.yml'), 'w') do |f|
-      f.write({
-        "development" => {"adapter" => "sqlite3", "database" => "engines_development.sqlite3"},
-        "test"        => {"adapter" => "sqlite3", "database" => "engines_test.sqlite3"}
-      }.to_yaml)
+      out.puts "> Creating test application at #{test_app_dir}"
+
+      if ENV['RAILS']
+        vendor_dir = File.join(test_app_dir, 'vendor')
+        FileUtils.mkdir_p vendor_dir
+        
+        if ENV['RAILS'] == 'edge'
+          out.puts ">>> Cloning rails from GitHub"
+          run "cd #{vendor_dir} && git clone --depth 1 git://github.com/rails/rails.git"
+        elsif File.exist?(ENV['RAILS'])
+          out.puts ">>> Linking rails from #{ENV['RAILS']}"
+          run "cd #{vendor_dir} && ln -s #{ENV['RAILS']} rails"
+        else
+          raise "Couldn't build test application from '#{ENV['RAILS']}'"
+        end
+        
+        out.puts ">>> generating rails default directory structure"
+        run "ruby #{File.join(vendor_dir, 'rails', 'railties', 'bin', 'rails')} #{test_app_dir}"
+      else
+        version = `rails --version`.chomp.split.last
+        out.puts ">>> building rails using the 'rails' command (rails version: #{version})"
+        run "rails #{test_app_dir}"
+      end
+      
+      # get the database config and schema in place
+      out.puts ">>> writing database.yml"
+      require 'yaml'
+      File.open(File.join(test_app_dir, 'config', 'database.yml'), 'w') do |f|
+        f.write({
+          "development" => {"adapter" => "sqlite3", "database" => "engines_development.sqlite3"},
+          "test"        => {"adapter" => "sqlite3", "database" => "engines_test.sqlite3"}
+        }.to_yaml)
+      end
+      
+      out.puts ">>> copying schema.rb"
+      FileUtils.cp(File.join(File.dirname(__FILE__), *%w[test schema.rb]), 
+                   File.join(test_app_dir, 'db'))
+                 
     end
-    FileUtils.cp(File.join(File.dirname(__FILE__), *%w[test schema.rb]), 
-                 File.join(test_app_dir, 'db'))
   end
   
   # We can't link the plugin, as it needs to be present for script/generate to find
@@ -74,6 +121,7 @@ namespace :test do
   # TODO: find and +1/create issue for loading generators from symlinked plugins
   desc 'Mirror the engines plugin into the test application'
   task :copy_engines_plugin do
+    puts "> Copying engines plugin into test application"
     engines_plugin = File.join(test_app_dir, "vendor", "plugins", "engines")
     FileUtils.rm_r(engines_plugin) if File.exist?(engines_plugin)
     FileUtils.mkdir_p(engines_plugin)
@@ -81,33 +129,6 @@ namespace :test do
       FileUtils.cp_r(file, engines_plugin)
     end
   end
-  
-  # desc 'Ensure helper methods used by the engines plugin test suite are available'
-  # task :append_engines_test_helper do
-  #   engines_test_helper_line = "require 'engines_test_helper'"
-  #   
-  #   test_helper_rb = File.join(test_app_dir, "test", "test_helper.rb")
-  #   test_helper_lines = File.readlines(test_helper_rb)
-  #   
-  #   return if test_helper_lines.include?(engines_test_helper_line)
-  #   
-  #   test_helper_lines << engines_test_helper_line
-  #   File.open(test_helper_rb, 'w') { |f| f.write test_helper_lines }
-  # end
-  # 
-  # desc 'Add the engines bootstrap line to the environment.rb file if it is missing'
-  # task :insert_engines_boot_loader_line do
-  #   engines_boot_line = "require File.join(File.dirname(__FILE__), '../vendor/plugins/engines/boot')"
-  #   
-  #   environment_rb_file = File.join(test_app_dir, 'config', 'environment.rb')
-  #   environment_rb_lines = File.readlines(environment_rb_file)
-  #   return if environment_rb_lines.include?(engines_boot_line)
-  #   
-  #   first_initializer_line = environment_rb_lines.find { |line| line =~ /\ARails::Initializer/ }
-  #   index = environment_rb_lines.index(first_initializer_line)
-  #   environment_rb_lines.insert(index, engines_boot_line + "\n\n")
-  #   File.open(environment_rb_file, 'w') { |f| f.write environment_rb_lines }
-  # end
   
   def insert_line(line, options)
     line = line + "\n"
@@ -138,7 +159,7 @@ namespace :test do
   
   desc 'Update the plugin and tests files in the test application from the plugin'
   task :mirror_engine_files => [:copy_engines_plugin] do
-    
+    puts "> Modifying default config files to load engines plugin"
     insert_line("require File.join(File.dirname(__FILE__), '../vendor/plugins/engines/boot')",
                 :into => 'config/environment.rb',
                 :after => "require File.join(File.dirname(__FILE__), 'boot')")
@@ -148,6 +169,7 @@ namespace :test do
                 
     insert_line("require 'engines_test_helper'", :into => 'test/test_helper.rb')
     
+    puts "> mirroring test application files into #{test_app_dir}"
     mirror_test_files('app')
     mirror_test_files('lib')
     mirror_test_files('plugins', 'vendor')
