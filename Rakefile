@@ -103,16 +103,10 @@ namespace :test do
       out.puts ">>> writing database.yml"
       require 'yaml'
       File.open(File.join(test_app_dir, 'config', 'database.yml'), 'w') do |f|
-        f.write({
-          "development" => {"adapter" => "sqlite3", "database" => "engines_development.sqlite3"},
-          "test"        => {"adapter" => "sqlite3", "database" => "engines_test.sqlite3"}
-        }.to_yaml)
+        f.write(%w(development test).inject({}) do |h, env| 
+          h[env] = {"adapter" => "sqlite3", "database" => "engines_#{env}.sqlite3"} ; h
+        end.to_yaml)
       end
-      
-      out.puts ">>> copying schema.rb"
-      FileUtils.cp(File.join(File.dirname(__FILE__), *%w[test schema.rb]), 
-                   File.join(test_app_dir, 'db'))
-                 
     end
   end
   
@@ -182,5 +176,6 @@ namespace :test do
 end
 
 task :test => "test:prepare" do
-  exec("cd #{test_app_dir} && rake db:schema:load && rake")
+  # We use exec here to replace the current running rake process
+  exec("cd #{test_app_dir} && rake")
 end
