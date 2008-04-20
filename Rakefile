@@ -31,6 +31,8 @@ task :cruise do
   end  
 end
 
+task :clean => [:clobber_doc, "test:clean"]
+
 namespace :test do
   
   # Yields a block with STDOUT and STDERR silenced. If you *really* want
@@ -152,7 +154,7 @@ namespace :test do
   end
   
   desc 'Update the plugin and tests files in the test application from the plugin'
-  task :mirror_engine_files => [:copy_engines_plugin] do
+  task :mirror_engine_files => [:test_app, :copy_engines_plugin] do
     puts "> Modifying default config files to load engines plugin"
     insert_line("require File.join(File.dirname(__FILE__), '../vendor/plugins/engines/boot')",
                 :into => 'config/environment.rb',
@@ -172,10 +174,14 @@ namespace :test do
   end
   
   desc 'Prepare the engines test environment'
-  task :prepare => [:clean, :generate_app, :mirror_engine_files]
+  file :test_app do
+    puts "> Recreating test application"
+    Rake::Task["test:clean"].invoke
+    Rake::Task["test:generate_app"].invoke
+  end
 end
 
-task :test => "test:prepare" do
+task :test => "test:mirror_engine_files" do
   # We use exec here to replace the current running rake process
   exec("cd #{test_app_dir} && rake")
 end
