@@ -20,7 +20,7 @@ class LoadPathTest < Test::Unit::TestCase
   # before any plugin directories
   
   def test_application_app_libs_should_precede_all_plugin_app_libs
-    types = ['app/controllers', 'app/helpers', 'app/models', 'components', 'lib']
+    types = %w(app/controllers app/helpers app/models lib)
     types.each do |t|
       app_index = load_path_index(File.join(RAILS_ROOT, t))
       assert_not_nil app_index, "#{t} is missing in $LOAD_PATH"
@@ -35,7 +35,7 @@ class LoadPathTest < Test::Unit::TestCase
   # the order they were started  
   
   def test_plugin_dirs_should_appear_in_reverse_plugin_loading_order
-    app_paths = %w(app/controllers/ app app/models app/helpers components config lib)
+    app_paths = %w(app/controllers/ app app/models app/helpers config lib)
     app_paths.map { |p| File.join(RAILS_ROOT, p)}
     plugin_paths = Engines.plugins.reverse.collect { |plugin| plugin.load_paths.reverse }.flatten    
     
