@@ -5,10 +5,7 @@
 unless Rake::TaskManager.methods.include?(:redefine_task)
   module Rake
     module TaskManager
-
-      # adjusted to fix bug with rake 0.8.x
-      # see http://rubyforge.org/pipermail/rake-devel/2007-December.txt
-      # search above for 'redefine rake task broken in 0.8.x for a rails app' to find message thread
+      
       def redefine_task(task_class, args, &block)
         task_name, deps = resolve_args([args])
         task_name = task_class.scope_name(@scope, task_name)
