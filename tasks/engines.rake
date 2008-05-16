@@ -2,7 +2,7 @@
 # handy for modifying existing Rails rake tasks.
 # Credit for the original snippet of code goes to Jeremy Kemper
 # http://pastie.caboo.se/9620
-unless Rake::TaskManager.methods.include?(:redefine_task)
+unless Rake::TaskManager.methods.include?('redefine_task')
   module Rake
     module TaskManager
       
