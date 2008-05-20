@@ -5,9 +5,8 @@
 unless Rake::TaskManager.methods.include?('redefine_task')
   module Rake
     module TaskManager
-      
       def redefine_task(task_class, args, &block)
-        task_name, deps = resolve_args([args])
+        task_name, arg_names, deps = resolve_args([args])
         task_name = task_class.scope_name(@scope, task_name)
         deps = [deps] unless deps.respond_to?(:to_ary)
         deps = deps.collect {|d| d.to_s }
