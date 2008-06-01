@@ -84,8 +84,15 @@ namespace :test do
         FileUtils.mkdir_p vendor_dir
         
         if ENV['RAILS'] == 'edge'
-          out.puts "    Cloning rails from GitHub"
+          out.puts "    Cloning Edge Rails from GitHub"
           run "cd #{vendor_dir} && git clone --depth 1 git://github.com/rails/rails.git"
+        elsif ENV['RAILS'] =~ /\d\.\d\.\d/
+          out.puts "    Cloning Rails Tag #{ENV['RAILS']} from GitHub"
+          run ["cd #{vendor_dir}",
+               "git clone --depth 1 git://github.com/rails/rails.git",
+               "cd rails",
+               "git pull",
+               "git checkout v#{ENV['RAILS']}"].join(" && ")
         elsif File.exist?(ENV['RAILS'])
           out.puts "    Linking rails from #{ENV['RAILS']}"
           run "cd #{vendor_dir} && ln -s #{ENV['RAILS']} rails"
@@ -174,7 +181,7 @@ namespace :test do
   end
   
   desc 'Prepare the engines test environment'
-  file :test_app do
+  task :test_app do
     puts "> Recreating test application"
     Rake::Task["test:clean"].invoke
     Rake::Task["test:generate_app"].invoke
