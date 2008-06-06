@@ -65,6 +65,7 @@ namespace :test do
   end
   
   def run(cmd)
+    cmd = cmd.join(" && ") if cmd.is_a?(Array)
     system(cmd) || raise("failed running '#{cmd}'")
   end
   
@@ -76,9 +77,8 @@ namespace :test do
   desc 'Build the test rails application (use RAILS=[edge,<directory>] to test against specific version)'
   task :generate_app do
     silence do |out, err|
-    
       out.puts "> Creating test application at #{test_app_dir}"
-
+        
       if ENV['RAILS']
         vendor_dir = File.join(test_app_dir, 'vendor')
         FileUtils.mkdir_p vendor_dir
@@ -87,19 +87,27 @@ namespace :test do
           out.puts "    Cloning Edge Rails from GitHub"
           run "cd #{vendor_dir} && git clone --depth 1 git://github.com/rails/rails.git"
         elsif ENV['RAILS'] =~ /\d\.\d\.\d/
-          out.puts "    Cloning Rails Tag #{ENV['RAILS']} from GitHub"
-          run ["cd #{vendor_dir}",
-               "git clone --depth 1 git://github.com/rails/rails.git",
-               "cd rails",
-               "git pull",
-               "git checkout v#{ENV['RAILS']}"].join(" && ")
+          if ENV['CURL']
+            out.puts "    Cloning Rails Tag #{ENV['RAILS']} from GitHub using curl and tar"
+            run ["cd #{vendor_dir}",
+                 "mkdir rails",
+                 "cd rails",
+                 "curl -s -L http://github.com/rails/rails/tarball/v2.1.0 | tar xzv --strip-components 1"]
+          else
+            out.puts "    Cloning Rails Tag #{ENV['RAILS']} from GitHub (can be slow - set CURL=true to use curl)"
+            run ["cd #{vendor_dir}",
+                 "git clone git://github.com/rails/rails.git",
+                 "cd rails",
+                 "git pull",
+                 "git checkout v#{ENV['RAILS']}"]
+          end
         elsif File.exist?(ENV['RAILS'])
           out.puts "    Linking rails from #{ENV['RAILS']}"
           run "cd #{vendor_dir} && ln -s #{ENV['RAILS']} rails"
         else
           raise "Couldn't build test application from '#{ENV['RAILS']}'"
         end
-        
+      
         out.puts "    generating rails default directory structure"
         run "ruby #{File.join(vendor_dir, 'rails', 'railties', 'bin', 'rails')} #{test_app_dir}"
       else
@@ -107,7 +115,7 @@ namespace :test do
         out.puts "    building rails using the 'rails' command (rails version: #{version})"
         run "rails #{test_app_dir}"
       end
-      
+    
       # get the database config and schema in place
       out.puts "    writing database.yml"
       require 'yaml'
@@ -182,9 +190,17 @@ namespace :test do
   
   desc 'Prepare the engines test environment'
   task :test_app do
-    puts "> Recreating test application"
-    Rake::Task["test:clean"].invoke
-    Rake::Task["test:generate_app"].invoke
+    version_tag = File.join(test_app_dir, 'RAILS_VERSION')
+    existing_version = File.read(version_tag).chomp rescue 'unknown'
+    if existing_version == ENV['RAILS']
+      puts "> Reusing existing test application (#{ENV['RAILS']})"
+    else
+      puts "> Recreating test application"
+      Rake::Task["test:clean"].invoke
+      Rake::Task["test:generate_app"].invoke
+      
+      File.open(version_tag, "w") { |f| f.write ENV['RAILS'] }
+    end
   end
 end
 
