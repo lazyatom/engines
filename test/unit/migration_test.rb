@@ -25,6 +25,18 @@ class MigrationsTest < Test::Unit::TestCase
     assert table_exists?('tests')
     assert table_exists?('others')
   end
+  
+  def test_engine_migrations_can_upgrade_incrementally
+    Engines.plugins[:test_migration].migrate(1)
+    assert table_exists?('tests')
+    assert !table_exists?('others')
+    assert_equal 1, Engines::Plugin::Migrator.current_version(Engines.plugins[:test_migration])
+    
+    
+    Engines.plugins[:test_migration].migrate(2)
+    assert table_exists?('others')
+    assert_equal 2, Engines::Plugin::Migrator.current_version(Engines.plugins[:test_migration])
+  end
     
   def test_generator_creates_plugin_migration_file
     Rails::Generator::Scripts::Generate.new.run(['plugin_migration', 'test_migration'], :quiet => true)
