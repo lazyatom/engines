@@ -18,24 +18,32 @@ class MigrationsTest < Test::Unit::TestCase
   def test_engine_migrations_can_run_down
     assert !table_exists?('tests'), ActiveRecord::Base.connection.tables.inspect
     assert !table_exists?('others'), ActiveRecord::Base.connection.tables.inspect
+    assert !table_exists?('extras'), ActiveRecord::Base.connection.tables.inspect
   end
     
   def test_engine_migrations_can_run_up
-    Engines.plugins[:test_migration].migrate(2)
+    Engines.plugins[:test_migration].migrate(3)
     assert table_exists?('tests')
     assert table_exists?('others')
+    assert table_exists?('extras')
   end
   
   def test_engine_migrations_can_upgrade_incrementally
     Engines.plugins[:test_migration].migrate(1)
     assert table_exists?('tests')
     assert !table_exists?('others')
+    assert !table_exists?('extras')
     assert_equal 1, Engines::Plugin::Migrator.current_version(Engines.plugins[:test_migration])
     
     
     Engines.plugins[:test_migration].migrate(2)
     assert table_exists?('others')
     assert_equal 2, Engines::Plugin::Migrator.current_version(Engines.plugins[:test_migration])
+    
+    
+    Engines.plugins[:test_migration].migrate(3)
+    assert table_exists?('extras')
+    assert_equal 3, Engines::Plugin::Migrator.current_version(Engines.plugins[:test_migration])
   end
     
   def test_generator_creates_plugin_migration_file
@@ -50,6 +58,6 @@ class MigrationsTest < Test::Unit::TestCase
   end
   
   def migration_file
-    Dir["#{@@migration_dir}/*test_migration_to_version_2.rb"][0]
+    Dir["#{@@migration_dir}/*test_migration_to_version_3.rb"][0]
   end
 end
