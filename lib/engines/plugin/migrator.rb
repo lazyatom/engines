@@ -53,11 +53,12 @@ class Engines::Plugin::Migrator < ActiveRecord::Migrator
   end
   
   def migrated(plugin=current_plugin)
-    ActiveRecord::Base.connection.select_values(<<-ESQL
+    current = ActiveRecord::Base.connection.select_value(<<-ESQL
       SELECT version FROM #{self.class.schema_info_table_name}
       WHERE plugin_name = '#{plugin.name}'
     ESQL
-    ).map(&:to_i).sort - [0]
+    ).to_i
+    current ? (1..current).to_a : []
   end
   
   # Sets the version of the plugin in Engines::Plugin::Migrator.current_plugin to
