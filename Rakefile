@@ -207,5 +207,5 @@ end
 task :test => "test:mirror_engine_files" do
   puts "> Loading the test application environment and running tests"
   # We use exec here to replace the current running rake process
-  exec("cd #{test_app_dir} && rake")
+  exec("cd #{test_app_dir} && rake db:migrate && rake")
 end
