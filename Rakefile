@@ -124,6 +124,8 @@ namespace :test do
           h[env] = {"adapter" => "sqlite3", "database" => "engines_#{env}.sqlite3"} ; h
         end.to_yaml)
       end
+      out.puts "    installing exception_notification plugin"
+      run "cd #{test_app_dir} && ./script/plugin install exception_notification"
     end
   end
   
