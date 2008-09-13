@@ -92,7 +92,7 @@ namespace :test do
             run ["cd #{vendor_dir}",
                  "mkdir rails",
                  "cd rails",
-                 "curl -s -L http://github.com/rails/rails/tarball/v2.1.0 | tar xzv --strip-components 1"]
+                 "curl -s -L http://github.com/rails/rails/tarball/#{ENV['RAILS']} | tar xzv --strip-components 1"]
           else
             out.puts "    Cloning Rails Tag #{ENV['RAILS']} from GitHub (can be slow - set CURL=true to use curl)"
             run ["cd #{vendor_dir}",
