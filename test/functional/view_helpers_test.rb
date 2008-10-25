@@ -28,4 +28,9 @@ class ViewHelpersTest < ActionController::TestCase
     get :index
     assert_tag :div, :attributes => { :id => "assets_layout" }
   end  
+
+	def test_plugin_image_submit_helpers
+		assert_tag :input, :attributes => { :src => "/plugin_assets/test_assets/images/image.png", :type => "image"}
+	end
+
 end
