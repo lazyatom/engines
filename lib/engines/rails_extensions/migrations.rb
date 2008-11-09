@@ -118,6 +118,16 @@ require "engines/plugin/migrator"
 #
 #   Engines.plugins[:whatever].migrate(version)
 #
-# ---
 #
-# We no longer need Engines::RailsExtensions::Migrations as we are now relying on the migration mechanism in Rails 2.1
+# = Upgrading from previous versions of the engines plugin
+#
+# Thanks to the tireless work of the plugin developer community, we can now relying on the migration 
+# mechanism in Rails 2.1+ to do much of the plugin migration work for us. This also means that we
+# don't need a seperate schema_info table for plugins.
+#
+# To update your application, run
+#
+#   rake db:migrate:upgrade_plugin_migrations
+#
+# This will ensure that migration information is carried over into the main schema_migrations table.
+# 
