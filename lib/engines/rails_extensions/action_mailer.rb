@@ -16,9 +16,6 @@
 module Engines::RailsExtensions::ActionMailer
   def self.included(base) #:nodoc:
     base.class_eval do
-      # TODO commented this out because it seems to break ActionMailer
-      # how can this be fixed?
-      
       alias_method_chain :template_path, :engine_additions
       alias_method_chain :initialize_template_class, :engine_additions
     end
