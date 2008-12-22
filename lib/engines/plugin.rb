@@ -76,6 +76,7 @@ module Engines
       return if loaded?
       super initializer
       add_plugin_view_paths
+      add_plugin_locale_paths
       Assets.mirror_files_for(self)
     end    
   
@@ -90,6 +91,20 @@ module Engines
       if File.exist?(view_path)
         ActionController::Base.view_paths.insert(1, view_path) # push it just underneath the app
       end
+    end
+
+    def add_plugin_locale_paths
+      locale_path = File.join(directory, 'locales')
+      return unless File.exists?(locale_path)
+
+      locale_files = Dir[File.join(locale_path, '*.{rb,yml}')]
+      return if locale_files.blank?
+
+      first_app_element = 
+        I18n.load_path.select{ |e| e =~ /^#{ RAILS_ROOT }/ }.reject{ |e| e =~ /^#{ RAILS_ROOT }\/vendor\/plugins/ }.first
+      app_index = I18n.load_path.index(first_app_element) || - 1
+
+      I18n.load_path.insert(app_index, *locale_files)
     end
 
     # The path to this plugin's public files
