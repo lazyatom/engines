@@ -70,10 +70,10 @@ namespace :db do
         new_sm_table = ActiveRecord::Migrator.schema_migrations_table_name
         
         # Check if the row already exists for some reason - maybe run this task more than once.
-        return if ActiveRecord::Base.connection.select_rows("SELECT * FROM #{new_sm_table} WHERE version = #{version_string.dump}").size > 0
+        return if ActiveRecord::Base.connection.select_rows("SELECT * FROM #{new_sm_table} WHERE version = #{version_string.dump.gsub("\"", "'")}").size > 0
         
         puts "Inserting new version #{version} for plugin #{plugin_name}.."
-        ActiveRecord::Base.connection.insert("INSERT INTO #{new_sm_table} (version) VALUES (#{version_string.dump})")
+        ActiveRecord::Base.connection.insert("INSERT INTO #{new_sm_table} (version) VALUES (#{version_string.dump.gsub("\"", "'")})")
       end
       
       # We need to figure out if they already used "fix_plugin_migrations"
