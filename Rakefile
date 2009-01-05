@@ -125,7 +125,7 @@ namespace :test do
         end.to_yaml)
       end
       out.puts "    installing exception_notification plugin"
-      run "cd #{test_app_dir} && ./script/plugin install exception_notification"
+      run "cd #{test_app_dir} && ./script/plugin install git://github.com/rails/exception_notification.git"
     end
   end
   
