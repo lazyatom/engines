@@ -180,6 +180,9 @@ namespace :test do
     insert_line('map.from_plugin :test_routing', :into => 'config/routes.rb', 
                 :after => /\AActionController::Routing::Routes/)
                 
+    insert_line('map.resources :things', :into => 'config/routes.rb', 
+                :after => /\AActionController::Routing::Routes/)
+                
     insert_line("require 'engines_test_helper'", :into => 'test/test_helper.rb')
     
     puts "> Mirroring test application files into #{test_app_dir}"
