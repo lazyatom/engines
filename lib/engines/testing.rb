@@ -67,10 +67,14 @@ module Engines::Testing
   # This method is called by the engines-supplied plugin testing rake tasks
   def self.setup_plugin_fixtures(plugins = Engines.plugins.by_precedence)
     
+    # First, clear the directory
+    Dir.glob("#{self.temporary_fixtures_directory}/*.yml").each{|fixture| File.unlink(fixture)}
+    
     # Copy all plugin fixtures, and then the application fixtures, into this directory
     plugins.each do |plugin| 
       plugin_fixtures_directory =  File.join(plugin.directory, "test", "fixtures")
-      if File.directory?(plugin_fixtures_directory)
+      plugin_app_directory =  File.join(plugin.directory, "app")
+      if File.directory?(plugin_app_directory) && File.directory?(plugin_fixtures_directory)
         Engines.mirror_files_from(plugin_fixtures_directory, self.temporary_fixtures_directory)
       end
     end
