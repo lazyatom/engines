@@ -68,7 +68,7 @@ module Engines::Testing
   def self.setup_plugin_fixtures(plugins = Engines.plugins.by_precedence)
     
     # First, clear the directory
-    Dir.glob("#{self.temporary_fixtures_directory}/*.yml").each{|fixture| File.unlink(fixture)}
+    Dir.glob("#{self.temporary_fixtures_directory}/*.yml").each{|fixture| File.delete(fixture)}
     
     # Copy all plugin fixtures, and then the application fixtures, into this directory
     plugins.each do |plugin| 
