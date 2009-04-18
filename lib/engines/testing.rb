@@ -88,4 +88,14 @@ module Engines::Testing
     ActiveSupport::TestCase.fixture_path = self.temporary_fixtures_directory
     $LOAD_PATH.unshift self.temporary_fixtures_directory
   end
+  
+  # overridden test should be in test/{unit,functional,integration}/{plugin_name}/{test_name}
+  def self.override_tests_from_app
+    filename = caller.first.split(":").first
+    plugin_name = filename.split("/")[-4]
+    test_kind = filename.split("/")[-2]
+    override_file = File.expand_path(File.join(File.dirname(filename), "..", "..", "..", "..", "..", "test", 
+                                               test_kind, plugin_name, File.basename(filename)))
+    load(override_file) if File.exist?(override_file)
+  end
 end
