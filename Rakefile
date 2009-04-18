@@ -182,6 +182,8 @@ namespace :test do
                 
     insert_line("require 'engines_test_helper'", :into => 'test/test_helper.rb')
     
+    insert_line("task :test => ['test:engines:all']", :into => 'Rakefile')
+    
     puts "> Mirroring test application files into #{test_app_dir}"
     mirror_test_files('app')
     mirror_test_files('lib')

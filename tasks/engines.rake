@@ -217,6 +217,34 @@ Report any issues on http://dev.rails-engines.org. Thanks!
 -~===============( ... as you were ... )============================~-}
   end
   
+  namespace :engines do
+    
+    def engine_plugins
+      Dir["vendor/plugins/*"].select { |f| File.directory?(File.join(f, "app")) }.map { |f| File.basename(f) }.join(",")
+    end
+    
+    desc "Run tests from within engines plugins (plugins with an 'app' directory)"
+    task :all => [:units, :functionals, :integration]
+    
+    desc "Run unit tests from within engines plugins (plugins with an 'app' directory)"
+    Rake::TestTask.new(:units => "test:plugins:setup_plugin_fixtures") do |t|
+      t.pattern = "vendor/plugins/{#{ENV['PLUGIN'] || engine_plugins}}/test/unit/**/*_test.rb"
+      t.verbose = true
+    end
+
+    desc "Run functional tests from within engines plugins (plugins with an 'app' directory)"
+    Rake::TestTask.new(:functionals => "test:plugins:setup_plugin_fixtures") do |t|
+      t.pattern = "vendor/plugins/{#{ENV['PLUGIN'] || engine_plugins}}/test/functional/**/*_test.rb"
+      t.verbose = true
+    end
+
+    desc "Run integration tests from within engines plugins (plugins with an 'app' directory)"
+    Rake::TestTask.new(:integration => "test:plugins:setup_plugin_fixtures") do |t|
+      t.pattern = "vendor/plugins/{#{ENV['PLUGIN'] || engine_plugins}}/test/integration/**/*_test.rb"
+      t.verbose = true
+    end
+  end
+  
   namespace :plugins do
 
     desc "Run the plugin tests in vendor/plugins/**/test (or specify with PLUGIN=name)"
