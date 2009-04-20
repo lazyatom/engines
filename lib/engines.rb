@@ -68,7 +68,7 @@ module Engines
   mattr_accessor :disable_application_code_loading
   self.disable_application_code_loading = false
   
-  # Set this ti true if code should not be mixed (i.e. it will be loaded
+  # Set this to true if code should not be mixed (i.e. it will be loaded
   # from the first valid path on $LOAD_PATH)
   mattr_accessor :disable_code_mixing
   self.disable_code_mixing = false
