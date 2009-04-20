@@ -124,9 +124,9 @@ module Engines
     # and that they are placed within plugin/app/things (the pluralized form of 'thing').
     # 
     # It's important to note that you'll also want to ensure that the "things" are
-    # on your load path in your plugin's init.rb:
+    # on your load path by including them in Rails load path mechanism, e.g. in init.rb:
     #
-    #   Rails.plugins[:my_plugin].code_paths << "app/things"
+    #  ActiveSupport::Dependencies.load_paths << File.join(File.dirname(__FILE__), 'app', 'things'))
     #
     def mix_code_from(*types)
       self.code_mixing_file_types += types.map { |x| x.to_s.singularize }

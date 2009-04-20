@@ -152,8 +152,8 @@ end
 
 # this is just a modification of the original task in railties/lib/tasks/documentation.rake, 
 # because the default task doesn't support subdirectories like <plugin>/app or
-# <plugin>/component. These tasks now include every file under a plugin's code paths (see
-# Plugin#code_paths).
+# <plugin>/component. These tasks now include every file under a plugin's load paths (see
+# Plugin#load_paths).
 namespace :doc do
 
   plugins = FileList['vendor/plugins/**'].collect { |plugin| File.basename(plugin) }
@@ -172,9 +172,9 @@ namespace :doc do
         options << '--line-numbers' << '--inline-source'
         options << '-T html'
 
-        # Include every file in the plugin's code_paths (see Plugin#code_paths)
+        # Include every file in the plugin's load_paths (see Plugin#load_paths)
         if Engines.plugins[plugin]
-          files.include("#{plugin_base}/{#{Engines.plugins[plugin].code_paths.join(",")}}/**/*.rb")
+          files.include("#{plugin_base}/{#{Engines.plugins[plugin].load_paths.join(",")}}/**/*.rb")
         end
         if File.exists?("#{plugin_base}/README")
           files.include("#{plugin_base}/README")    
