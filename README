@@ -1,3 +1,11 @@
+= IMPORTANT
+
+Engines have been partially integrated into Rails 3.0, and fully integrated into Rails 3.1; I strongly suggest you upgrade and use the native engines features in those releases, rather than using this (increasingly out of date) plugin.
+
+However, if you *must* use Rails 2.3 or earlier, you may still find this plugin useful.
+
+= Old preamble
+
 The engines plugin enhances Rails' own plugin framework, making it simple to share controllers, helpers, models, public assets, routes and migrations in plugins.
 
 For more information, see http://rails-engines.org
