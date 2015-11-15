@@ -37,7 +37,27 @@ Include these files in an <tt>app</tt> directory just like you would in a normal
 
 Model code can similarly be placed in an <tt>app/models/</tt> directory. Unfortunately, it's not possible to automatically override methods within a model; if your application needs to change the way a model behaves, consider creating a subclass, or replacing the model entirely within your application's <tt>app/models/</tt> directory. See Engines::RailsExtensions::Dependencies for more information.
 
-IMPORTANT NOTE: when you load code from within plugins, it is typically not handled well by Rails in terms of unloading and reloading changes. Look here for more information - http://rails-engines.org/development/common-issues-when-overloading-code-from-plugins/
+IMPORTANT NOTE: when you load code from within plugins, it is typically not handled well by Rails in terms of unloading and reloading changes. If you try to overload models like this:
+
+    require "user" 
+
+    class User < ActiveRecord::Base
+      def your_new_method()
+        # anything
+      end
+    end
+    
+... you will encounter problems in development mode. This is because you have circumvented Rails’ dependency mechanism with the explicit require, which will produce a User class that Rails has not marked as reloadable.
+
+If you choose to use this style of overriding, you must use require_dependency rather than require to inform Rails that you are loading the class:
+
+    require_dependency "user"
+
+    class User < ActiveRecord::Base
+      def your_new_method()
+        # anything
+      end
+    end
 
 === Routes
 
